@@ -47,6 +47,28 @@ async function fetchWebApi(endpoint, method, body) {
       window.location.href = `${redirectUri}?error=invalid_token`;
       return null;
     }
+    if (res.status === 429) {
+      // Espera antes de volver a intentar la solicitud
+      const retryAfter = res.headers.get('Retry-After') || 1; // Obtén el tiempo de espera recomendado o usa 1 segundo como valor predeterminado
+      console.warn(`Rate limit exceeded. Retrying in ${retryAfter} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return fetchWebApi(endpoint, method, body); // Reintenta la solicitud
+    }
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching API:', error);
+    return null;
+  }
+}
+
+
+    // Verifica la respuesta
+    if (res.status === 401) {
+      console.error('Token expired or invalid. Please re-authenticate.');
+      window.location.href = `${redirectUri}?error=invalid_token`;
+      return null;
+    }
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     return await res.json();
   } catch (error) {
@@ -123,8 +145,12 @@ async function loadMoreTracks() {
   }
 
   seedTracks = [...seedTracks, ...likedTracks];
-  const newTracks = await getRecommendedTracks(seedTracks);
-  tracks.push(...newTracks);
+  try {
+    const newTracks = await getRecommendedTracks(seedTracks);
+    tracks.push(...newTracks);
+  } catch (error) {
+    console.error('Error loading more tracks:', error);
+  }
 }
 
 async function playNext() {
