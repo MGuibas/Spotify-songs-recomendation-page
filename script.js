@@ -1,3 +1,4 @@
+// Declaramos las variables en el alcance global
 let accessToken;
 let playlistId;
 let currentTrackIndex = -1;
@@ -7,6 +8,7 @@ let dislikedTracks = [];
 let history = [];
 let userId;
 
+// Configuración de Spotify
 const clientId = '3d46321079184aa3a9d9a93c74365225';
 const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
 const scopes = [
@@ -16,17 +18,18 @@ const scopes = [
   'user-library-read'
 ];
 
-function login() {
+// Aseguramos que todas las funciones estén en el alcance global
+window.login = function() {
   const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
   window.location.href = authUrl;
 }
 
-function getAccessTokenFromUrl() {
+window.getAccessTokenFromUrl = function() {
   const params = new URLSearchParams(window.location.hash.slice(1));
   return params.get('access_token');
 }
 
-async function fetchWebApi(endpoint, method, body) {
+window.fetchWebApi = async function(endpoint, method, body) {
   if (!accessToken) {
     console.error('No access token available');
     return null;
@@ -50,7 +53,7 @@ async function fetchWebApi(endpoint, method, body) {
       const retryAfter = parseInt(res.headers.get('Retry-After') || '1');
       console.warn(`Rate limit exceeded. Retrying in ${retryAfter} seconds...`);
       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return fetchWebApi(endpoint, method, body);
+      return window.fetchWebApi(endpoint, method, body);
     }
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     return await res.json();
@@ -60,24 +63,24 @@ async function fetchWebApi(endpoint, method, body) {
   }
 }
 
-async function getUserId() {
+window.getUserId = async function() {
   if (!userId) {
-    const userData = await fetchWebApi('me', 'GET');
+    const userData = await window.fetchWebApi('me', 'GET');
     if (userData) userId = userData.id;
   }
   return userId;
 }
 
-async function getOrCreatePlaylist() {
+window.getOrCreatePlaylist = async function() {
   if (!playlistId) {
-    const playlists = await fetchWebApi('me/playlists', 'GET');
+    const playlists = await window.fetchWebApi('me/playlists', 'GET');
     if (playlists) {
       const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
       
       if (playlist) {
         playlistId = playlist.id;
       } else {
-        const newPlaylist = await fetchWebApi(`users/${await getUserId()}/playlists`, 'POST', {
+        const newPlaylist = await window.fetchWebApi(`users/${await window.getUserId()}/playlists`, 'POST', {
           name: 'Canciones Spotify TikTok',
           description: 'Playlist creada automáticamente para canciones de la aplicación Spotify TikTok',
           public: false
@@ -90,19 +93,19 @@ async function getOrCreatePlaylist() {
   return playlistId;
 }
 
-async function saveToPlaylist() {
+window.saveToPlaylist = async function() {
   const track = tracks[currentTrackIndex];
   if (!track) return;
-  const playlist = await getOrCreatePlaylist();
+  const playlist = await window.getOrCreatePlaylist();
   if (playlist) {
-    await fetchWebApi(`playlists/${playlist}/tracks`, 'POST', {
+    await window.fetchWebApi(`playlists/${playlist}/tracks`, 'POST', {
       uris: [track.uri]
     });
     console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
   }
 }
 
-async function getRecommendedTracks(seedTracks) {
+window.getRecommendedTracks = async function(seedTracks) {
   if (seedTracks.length === 0) {
     console.error('No seed tracks available to get recommendations.');
     return [];
@@ -110,7 +113,7 @@ async function getRecommendedTracks(seedTracks) {
 
   const seed = seedTracks.map(track => track.id).join(',');
   try {
-    const recommendations = await fetchWebApi(`recommendations?limit=10&seed_tracks=${seed}`, 'GET');
+    const recommendations = await window.fetchWebApi(`recommendations?limit=10&seed_tracks=${seed}`, 'GET');
     if (recommendations) {
       return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
     }
@@ -120,46 +123,46 @@ async function getRecommendedTracks(seedTracks) {
   return [];
 }
 
-async function loadMoreTracks() {
+window.loadMoreTracks = async function() {
   let seedTracks;
   if (tracks.length > 0) {
     seedTracks = tracks.slice(-5);
   } else {
-    const topTracks = await fetchWebApi('me/top/tracks?limit=5', 'GET');
+    const topTracks = await window.fetchWebApi('me/top/tracks?limit=5', 'GET');
     seedTracks = topTracks ? topTracks.items : [];
   }
 
   seedTracks = [...seedTracks, ...likedTracks];
   try {
-    const newTracks = await getRecommendedTracks(seedTracks);
+    const newTracks = await window.getRecommendedTracks(seedTracks);
     tracks.push(...newTracks);
   } catch (error) {
     console.error('Error loading more tracks:', error);
   }
 }
 
-async function playNext() {
+window.playNext = async function() {
   currentTrackIndex++;
   
   if (currentTrackIndex >= tracks.length) {
-    await loadMoreTracks();
+    await window.loadMoreTracks();
   }
 
   if (tracks[currentTrackIndex]) {
-    playTrack(tracks[currentTrackIndex]);
+    window.playTrack(tracks[currentTrackIndex]);
     history.push(currentTrackIndex);
   }
 }
 
-function playPrevious() {
+window.playPrevious = function() {
   if (history.length > 1) {
     history.pop();
     currentTrackIndex = history[history.length - 1];
-    playTrack(tracks[currentTrackIndex]);
+    window.playTrack(tracks[currentTrackIndex]);
   }
 }
 
-function playTrack(track) {
+window.playTrack = function(track) {
   if (track && track.preview_url) {
     document.getElementById('track-name').innerText = track.name;
     document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
@@ -172,26 +175,27 @@ function playTrack(track) {
   }
 }
 
-function dislikeTrack() {
+window.dislikeTrack = function() {
   const track = tracks[currentTrackIndex];
   if (track) {
     dislikedTracks.push(track.id);
     console.log(`Disliked: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
-    playNext();
+    window.playNext();
   }
 }
 
-const audio = document.getElementById('track-audio');
-audio.addEventListener('ended', playNext);
-
+// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
-  accessToken = getAccessTokenFromUrl();
+  const audio = document.getElementById('track-audio');
+  audio.addEventListener('ended', window.playNext);
+
+  accessToken = window.getAccessTokenFromUrl();
   if (!accessToken) {
-    login();
+    window.login();
   } else {
     document.getElementById('login-button').classList.add('hidden');
     document.getElementById('track').classList.remove('hidden');
     document.getElementById('controls').classList.remove('hidden');
-    loadMoreTracks().then(() => playNext());
+    window.loadMoreTracks().then(() => window.playNext());
   }
 });
