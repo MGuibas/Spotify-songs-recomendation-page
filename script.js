@@ -1,9 +1,4 @@
-const clientId = '3d46321079184aa3a9d9a93c74365225';
-const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
-const scopes = 'user-top-read user-read-recently-played playlist-modify-private playlist-read-private';
-
 let accessToken;
-let userId;
 let playlistId;
 let currentTrackIndex = -1;
 let tracks = [];
@@ -11,8 +6,18 @@ let likedTracks = [];
 let dislikedTracks = [];
 let history = [];
 
+// Configura tus credenciales de Spotify
+const clientId = '3d46321079184aa3a9d9a93c74365225';  // Reemplaza con tu Client ID
+const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';  // Reemplaza con tu Redirect URI
+const scopes = [
+  'playlist-read-private',
+  'playlist-modify-private',
+  'user-top-read',
+  'user-library-read'
+];
+
 function login() {
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
   window.location.href = authUrl;
 }
 
@@ -27,7 +32,7 @@ async function fetchWebApi(endpoint, method, body) {
     return null;
   }
   try {
-    const res = await fetch(`https://api.spotify.com/${endpoint}`, {
+    const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
@@ -35,21 +40,24 @@ async function fetchWebApi(endpoint, method, body) {
       method,
       body: body ? JSON.stringify(body) : undefined
     });
+
+    // Verifica la respuesta
+    if (res.status === 401) {
+      console.error('Token expired or invalid. Please re-authenticate.');
+      window.location.href = `${redirectUri}?error=invalid_token`;
+      return null;
+    }
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    const data = await res.json();
-    console.log(`Response from ${endpoint}:`, data); // Para depurar
-    return data;
+    return await res.json();
   } catch (error) {
     console.error('Error fetching API:', error);
     return null;
   }
 }
 
-
-
 async function getUserId() {
   if (!userId) {
-    const userData = await fetchWebApi('v1/me', 'GET');
+    const userData = await fetchWebApi('me', 'GET');
     if (userData) userId = userData.id;
   }
   return userId;
@@ -57,14 +65,14 @@ async function getUserId() {
 
 async function getOrCreatePlaylist() {
   if (!playlistId) {
-    const playlists = await fetchWebApi('v1/me/playlists', 'GET');
+    const playlists = await fetchWebApi('me/playlists', 'GET');
     if (playlists) {
       const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
       
       if (playlist) {
         playlistId = playlist.id;
       } else {
-        const newPlaylist = await fetchWebApi(`v1/users/${await getUserId()}/playlists`, 'POST', {
+        const newPlaylist = await fetchWebApi(`users/${await getUserId()}/playlists`, 'POST', {
           name: 'Canciones Spotify TikTok',
           description: 'Playlist creada automáticamente para canciones de la aplicación Spotify TikTok',
           public: false
@@ -73,6 +81,7 @@ async function getOrCreatePlaylist() {
       }
     }
   }
+  console.log('Playlist ID:', playlistId);  // Log playlist ID for debugging
   return playlistId;
 }
 
@@ -80,20 +89,23 @@ async function saveToPlaylist() {
   const track = tracks[currentTrackIndex];
   if (!track) return;
   const playlist = await getOrCreatePlaylist();
-  await fetchWebApi(`v1/playlists/${playlist}/tracks`, 'POST', {
+  await fetchWebApi(`playlists/${playlist}/tracks`, 'POST', {
     uris: [track.uri]
   });
   console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
 }
 
 async function getRecommendedTracks(seedTracks) {
+  if (seedTracks.length === 0) {
+    console.error('No seed tracks available to get recommendations.');
+    return [];
+  }
+
   const seed = seedTracks.map(track => track.id).join(',');
   try {
-    const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
-    if (recommendations && recommendations.tracks) {
+    const recommendations = await fetchWebApi(`recommendations?limit=10&seed_tracks=${seed}`, 'GET');
+    if (recommendations) {
       return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
-    } else {
-      console.error('No recommendations data available');
     }
   } catch (error) {
     console.error('Error getting recommended tracks:', error);
@@ -101,18 +113,19 @@ async function getRecommendedTracks(seedTracks) {
   return [];
 }
 
-
 async function loadMoreTracks() {
-  let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET');
-  if (seedTracks && seedTracks.items) {
-    seedTracks = [...seedTracks.items, ...likedTracks];
-    const newTracks = await getRecommendedTracks(seedTracks);
-    tracks.push(...newTracks);
+  let seedTracks;
+  if (tracks.length > 0) {
+    seedTracks = tracks.slice(-5); // Obtén las últimas 5 pistas de la lista actual
   } else {
-    console.error('No top tracks data available');
+    const topTracks = await fetchWebApi('me/top/tracks?limit=5', 'GET');
+    seedTracks = topTracks ? topTracks.items : [];
   }
-}
 
+  seedTracks = [...seedTracks, ...likedTracks];
+  const newTracks = await getRecommendedTracks(seedTracks);
+  tracks.push(...newTracks);
+}
 
 async function playNext() {
   currentTrackIndex++;
@@ -157,8 +170,6 @@ function dislikeTrack() {
   }
 }
 
-
-
 // Reproduce la siguiente canción automáticamente cuando termine la actual
 const audio = document.getElementById('track-audio');
 audio.addEventListener('ended', playNext);
@@ -166,7 +177,9 @@ audio.addEventListener('ended', playNext);
 // Manejo del token y carga de canciones
 document.addEventListener('DOMContentLoaded', () => {
   accessToken = getAccessTokenFromUrl();
-  if (accessToken) {
+  if (!accessToken) {
+    login(); // Redirige a la página de inicio de sesión si no hay token
+  } else {
     document.getElementById('login-button').classList.add('hidden');
     document.getElementById('track').classList.remove('hidden');
     document.getElementById('controls').classList.remove('hidden');
