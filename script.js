@@ -73,6 +73,7 @@ async function getOrCreatePlaylist() {
   if (!playlistId) {
     const playlists = await fetchWebApi('me/playlists', 'GET');
     if (playlists) {
+      console.log('Playlists:', playlists);
       const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
       
       if (playlist) {
@@ -86,7 +87,7 @@ async function getOrCreatePlaylist() {
         });
         if (newPlaylist) {
           playlistId = newPlaylist.id;
-          console.log('Created new playlist:', playlistId);
+          console.log('Created new playlist:', newPlaylist);
         } else {
           console.error('Failed to create new playlist.');
         }
@@ -178,4 +179,34 @@ function playTrack(track) {
     document.getElementById('track-name').innerText = track.name;
     document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
     document.getElementById('album-image').src = track.album.images[0].url;
-    const audio
+    const audio = document.getElementById('track-audio');
+    audio.src = track.preview_url;
+    audio.play();
+  } else {
+    console.log('Track or preview URL not available.');
+  }
+}
+
+function dislikeTrack() {
+  const track = tracks[currentTrackIndex];
+  if (track) {
+    dislikedTracks.push(track.id);
+    console.log(`Disliked: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
+    playNext();
+  }
+}
+
+const audio = document.getElementById('track-audio');
+audio.addEventListener('ended', playNext);
+
+document.addEventListener('DOMContentLoaded', () => {
+  accessToken = getAccessTokenFromUrl();
+  if (!accessToken) {
+    login();
+  } else {
+    document.getElementById('login-button').classList.add('hidden');
+    document.getElementById('track').classList.remove('hidden');
+    document.getElementById('controls').classList.remove('hidden');
+    loadMoreTracks().then(() => playNext());
+  }
+});
