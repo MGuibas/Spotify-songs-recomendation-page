@@ -1,5 +1,5 @@
 let accessToken;
-let userId; // Define userId aquí
+let userId;
 let playlistId;
 let currentTrackIndex = -1;
 let tracks = [];
@@ -13,6 +13,8 @@ const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/
 const scopes = [
   'playlist-read-private',
   'playlist-modify-private',
+  'playlist-read-collaborative',
+  'playlist-modify-public',
   'user-top-read',
   'user-library-read'
 ];
@@ -58,7 +60,11 @@ async function fetchWebApi(endpoint, method, body) {
 async function getUserId() {
   if (!userId) {
     const userData = await fetchWebApi('me', 'GET');
-    if (userData) userId = userData.id;
+    if (userData) {
+      userId = userData.id;
+    } else {
+      console.error('Failed to fetch user data.');
+    }
   }
   return userId;
 }
@@ -72,6 +78,7 @@ async function getOrCreatePlaylist() {
       
       if (playlist) {
         playlistId = playlist.id;
+        console.log('Existing playlist found:', playlistId);
       } else {
         const newPlaylist = await fetchWebApi(`users/${await getUserId()}/playlists`, 'POST', {
           name: 'Canciones Spotify TikTok',
@@ -81,8 +88,12 @@ async function getOrCreatePlaylist() {
         if (newPlaylist) {
           playlistId = newPlaylist.id;
           console.log('Created new playlist:', newPlaylist);
+        } else {
+          console.error('Failed to create new playlist.');
         }
       }
+    } else {
+      console.error('Failed to fetch playlists.');
     }
   }
   console.log('Playlist ID:', playlistId);
@@ -199,4 +210,3 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMoreTracks().then(() => playNext());
   }
 });
-
