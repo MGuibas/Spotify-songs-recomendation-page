@@ -1,4 +1,5 @@
 let accessToken;
+let userId; // Define userId aquí
 let playlistId;
 let currentTrackIndex = -1;
 let tracks = [];
