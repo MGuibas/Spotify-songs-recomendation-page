@@ -1,3 +1,8 @@
+function login() {
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
+  window.location.href = authUrl;
+}
+
 let accessToken;
 let playlistId;
 let currentTrackIndex = -1;
@@ -16,10 +21,7 @@ const scopes = [
   'user-library-read'
 ];
 
-function login() {
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
-  window.location.href = authUrl;
-}
+
 
 function getAccessTokenFromUrl() {
   const params = new URLSearchParams(window.location.hash.replace('#', '?'));
