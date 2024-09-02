@@ -90,12 +90,17 @@ async function getRecommendedTracks(seedTracks) {
   const seed = seedTracks.map(track => track.id).join(',');
   try {
     const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
-    if (recommendations) return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
+    if (recommendations && recommendations.tracks) {
+      return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
+    } else {
+      console.error('No recommendations data available');
+    }
   } catch (error) {
     console.error('Error getting recommended tracks:', error);
   }
   return [];
 }
+
 
 async function loadMoreTracks() {
   let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET');
