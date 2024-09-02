@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify TikTok</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
 </head>
 <body>
     <div class="container">
@@ -18,15 +19,13 @@
         </div>
 
         <div id="controls" class="hidden fade-in">
-            <button onclick="playPrevious()">Previous</button>
-            <button onclick="dislikeTrack()">Dislike</button>
-            <button onclick="saveToPlaylist()">Save</button>
-            <button onclick="playNext()">Next</button>
+            <button onclick="window.playPrevious()">Previous</button>
+            <button onclick="window.dislikeTrack()">Dislike</button>
+            <button onclick="window.saveToPlaylist()">Save</button>
+            <button onclick="window.playNext()">Next</button>
         </div>
 
-        <button id="login-button" onclick="login()">Login with Spotify</button>
+        <button id="login-button" onclick="window.login()">Login with Spotify</button>
     </div>
-
-    <script src="script.js"></script>
 </body>
 </html>
