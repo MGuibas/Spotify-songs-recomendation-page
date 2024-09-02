@@ -1,30 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify TikTok Recomendaciones Infinitas</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify TikTok</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <div id="track" class="hidden fade-in">
-      <div id="album-cover">
-        <img src="/placeholder.svg" alt="Album cover" id="album-image">
-      </div>
-      <h1 id="track-name"></h1>
-      <p id="track-artist"></p>
-      <audio id="track-audio" controls></audio>
-    </div>
-    <div id="controls" class="hidden fade-in">
-      <button onclick="playPrevious()">Previous</button>
-      <button onclick="dislikeTrack()">Dislike</button>
-      <button onclick="saveToPlaylist()">Save</button>
-      <button onclick="playNext()">Next</button>
-    </div>
-    <button id="login-button" onclick="login()" class="fade-in">Login with Spotify</button>
-  </div>
+    <div class="container">
+        <div id="track" class="hidden fade-in">
+            <div id="album-cover">
+                <img id="album-image" src="/placeholder.svg" alt="Album cover">
+            </div>
+            <h2 id="track-name"></h2>
+            <p id="track-artist"></p>
+            <audio id="track-audio" controls></audio>
+        </div>
 
-  <script src="script.js"></script>
+        <div id="controls" class="hidden fade-in">
+            <button onclick="playPrevious()">Previous</button>
+            <button onclick="dislikeTrack()">Dislike</button>
+            <button onclick="saveToPlaylist()">Save</button>
+            <button onclick="playNext()">Next</button>
+        </div>
+
+        <button id="login-button" onclick="login()">Login with Spotify</button>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
