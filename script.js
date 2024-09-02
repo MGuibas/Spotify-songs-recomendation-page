@@ -98,11 +98,16 @@ async function getRecommendedTracks(seedTracks) {
 }
 
 async function loadMoreTracks() {
-  let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET').then(data => data.items);
-  seedTracks = [...seedTracks, ...likedTracks];
-  const newTracks = await getRecommendedTracks(seedTracks);
-  tracks.push(...newTracks);
+  let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET');
+  if (seedTracks && seedTracks.items) {
+    seedTracks = [...seedTracks.items, ...likedTracks];
+    const newTracks = await getRecommendedTracks(seedTracks);
+    tracks.push(...newTracks);
+  } else {
+    console.error('No top tracks data available');
+  }
 }
+
 
 async function playNext() {
   currentTrackIndex++;
