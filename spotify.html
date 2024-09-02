@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify TikTok Recomendaciones Infinitas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div id="track" class="hidden fade-in">
+      <div id="album-cover">
+        <img src="/placeholder.svg" alt="Album cover" id="album-image">
+      </div>
+      <h1 id="track-name"></h1>
+      <p id="track-artist"></p>
+      <audio id="track-audio" controls></audio>
+    </div>
+    <div id="controls" class="hidden fade-in">
+      <button onclick="playPrevious()">Previous</button>
+      <button onclick="dislikeTrack()">Dislike</button>
+      <button onclick="saveToPlaylist()">Save</button>
+      <button onclick="playNext()">Next</button>
+    </div>
+    <button id="login-button" onclick="login()" class="fade-in">Login with Spotify</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
