@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="container">
-    <div id="track" class="hidden fade-in card">
+    <div id="track" class="hidden fade-in">
       <div id="album-cover">
         <img src="/placeholder.svg" alt="Album cover" id="album-image">
       </div>
@@ -16,8 +16,11 @@
       <p id="track-artist"></p>
       <audio id="track-audio" controls></audio>
     </div>
-    <div id="instructions" class="hidden fade-in">
-      <p>Desliza a la derecha para pasar, a la izquierda para no me gusta, abajo para guardar</p>
+    <div id="controls" class="hidden fade-in">
+      <button onclick="playPrevious()">Previous</button>
+      <button onclick="dislikeTrack()">Dislike</button>
+      <button onclick="saveToPlaylist()">Save</button>
+      <button onclick="playNext()">Next</button>
     </div>
     <button id="login-button" onclick="login()" class="fade-in">Login with Spotify</button>
   </div>
