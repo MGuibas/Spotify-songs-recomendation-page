@@ -1,7 +1,3 @@
-const clientId = '3d46321079184aa3a9d9a93c74365225';
-const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
-const scopes = 'user-top-read user-read-recently-played playlist-modify-private playlist-read-private';
-
 let accessToken;
 let userId;
 let playlistId;
@@ -11,8 +7,20 @@ let likedTracks = [];
 let dislikedTracks = [];
 let history = [];
 
+// Configura tus credenciales de Spotify
+const clientId = '3d46321079184aa3a9d9a93c74365225';  // Reemplaza con tu Client ID
+const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';  // Reemplaza con tu Redirect URI
+const scopes = [
+  'playlist-read-private',
+  'playlist-modify-private',
+  'playlist-read-collaborative',
+  'playlist-modify-public',
+  'user-top-read',
+  'user-library-read'
+];
+
 function login() {
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
   window.location.href = authUrl;
 }
 
@@ -27,13 +35,20 @@ async function fetchWebApi(endpoint, method, body) {
     return null;
   }
   try {
-    const res = await fetch(`https://api.spotify.com/${endpoint}`, {
+    const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
       },
       method,
-      body: JSON.stringify(body)
+      body: body ? JSON.stringify(body) : undefined
     });
+
+    if (res.status === 401) {
+      console.error('Token expired or invalid. Please re-authenticate.');
+      window.location.href = `${redirectUri}?error=invalid_token`;
+      return null;
+    }
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     return await res.json();
   } catch (error) {
@@ -44,48 +59,79 @@ async function fetchWebApi(endpoint, method, body) {
 
 async function getUserId() {
   if (!userId) {
-    const userData = await fetchWebApi('v1/me', 'GET');
-    if (userData) userId = userData.id;
+    const userData = await fetchWebApi('me', 'GET');
+    if (userData) {
+      userId = userData.id;
+    } else {
+      console.error('Failed to fetch user data.');
+    }
   }
   return userId;
 }
 
 async function getOrCreatePlaylist() {
   if (!playlistId) {
-    const playlists = await fetchWebApi('v1/me/playlists', 'GET');
+    const playlists = await fetchWebApi('me/playlists', 'GET');
     if (playlists) {
       const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
       
       if (playlist) {
         playlistId = playlist.id;
+        console.log('Existing playlist found:', playlistId);
       } else {
-        const newPlaylist = await fetchWebApi(`v1/users/${await getUserId()}/playlists`, 'POST', {
+        const newPlaylist = await fetchWebApi(`users/${await getUserId()}/playlists`, 'POST', {
           name: 'Canciones Spotify TikTok',
           description: 'Playlist creada automáticamente para canciones de la aplicación Spotify TikTok',
           public: false
         });
-        if (newPlaylist) playlistId = newPlaylist.id;
+        if (newPlaylist) {
+          playlistId = newPlaylist.id;
+          console.log('Created new playlist:', playlistId);
+        } else {
+          console.error('Failed to create new playlist.');
+        }
       }
+    } else {
+      console.error('Failed to fetch playlists.');
     }
   }
+  console.log('Playlist ID:', playlistId);
   return playlistId;
 }
 
 async function saveToPlaylist() {
   const track = tracks[currentTrackIndex];
-  if (!track) return;
+  if (!track) {
+    console.error('No track available to save.');
+    return;
+  }
   const playlist = await getOrCreatePlaylist();
-  await fetchWebApi(`v1/playlists/${playlist}/tracks`, 'POST', {
+  if (!playlist) {
+    console.error('No playlist available to save to.');
+    return;
+  }
+  const response = await fetchWebApi(`playlists/${playlist}/tracks`, 'POST', {
     uris: [track.uri]
   });
-  console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
+  if (response) {
+    console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
+  } else {
+    console.error('Failed to save track to playlist.');
+  }
 }
 
 async function getRecommendedTracks(seedTracks) {
+  if (seedTracks.length === 0) {
+    console.error('No seed tracks available to get recommendations.');
+    return [];
+  }
+
   const seed = seedTracks.map(track => track.id).join(',');
   try {
-    const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
-    if (recommendations) return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
+    const recommendations = await fetchWebApi(`recommendations?limit=10&seed_tracks=${seed}`, 'GET');
+    if (recommendations) {
+      return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
+    }
   } catch (error) {
     console.error('Error getting recommended tracks:', error);
   }
@@ -93,7 +139,14 @@ async function getRecommendedTracks(seedTracks) {
 }
 
 async function loadMoreTracks() {
-  let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET').then(data => data.items);
+  let seedTracks;
+  if (tracks.length > 0) {
+    seedTracks = tracks.slice(-5); 
+  } else {
+    const topTracks = await fetchWebApi('me/top/tracks?limit=5', 'GET');
+    seedTracks = topTracks ? topTracks.items : [];
+  }
+
   seedTracks = [...seedTracks, ...likedTracks];
   const newTracks = await getRecommendedTracks(seedTracks);
   tracks.push(...newTracks);
@@ -114,7 +167,7 @@ async function playNext() {
 
 function playPrevious() {
   if (history.length > 1) {
-    history.pop(); // Remove current track
+    history.pop(); 
     currentTrackIndex = history[history.length - 1];
     playTrack(tracks[currentTrackIndex]);
   }
@@ -125,34 +178,4 @@ function playTrack(track) {
     document.getElementById('track-name').innerText = track.name;
     document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
     document.getElementById('album-image').src = track.album.images[0].url;
-    const audio = document.getElementById('track-audio');
-    audio.src = track.preview_url;
-    audio.play();
-  } else {
-    console.log('Track or preview URL not available.');
-  }
-}
-
-function dislikeTrack() {
-  const track = tracks[currentTrackIndex];
-  if (track) {
-    dislikedTracks.push(track.id);
-    console.log(`Disliked: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
-    playNext();
-  }
-}
-
-// Reproduce la siguiente canción automáticamente cuando termine la actual
-const audio = document.getElementById('track-audio');
-audio.addEventListener('ended', playNext);
-
-// Manejo del token y carga de canciones
-document.addEventListener('DOMContentLoaded', () => {
-  accessToken = getAccessTokenFromUrl();
-  if (accessToken) {
-    document.getElementById('login-button').classList.add('hidden');
-    document.getElementById('track').classList.remove('hidden');
-    document.getElementById('controls').classList.remove('hidden');
-    loadMoreTracks().then(() => playNext());
-  }
-});
+    const audio
