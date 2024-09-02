@@ -142,6 +142,59 @@ function dislikeTrack() {
   }
 }
 
+// Manejo del deslizamiento de la tarjeta
+let startX, startY, moveX, moveY;
+const card = document.getElementById('track');
+
+card.addEventListener('touchstart', dragStart);
+card.addEventListener('touchmove', drag);
+card.addEventListener('touchend', dragEnd);
+
+card.addEventListener('mousedown', dragStart);
+card.addEventListener('mousemove', drag);
+card.addEventListener('mouseup', dragEnd);
+card.addEventListener('mouseleave', dragEnd);
+
+function dragStart(e) {
+  if (e.type === 'touchstart') {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  } else {
+    startX = e.clientX;
+    startY = e.clientY;
+  }
+}
+
+function drag(e) {
+  if (startX === undefined || startY === undefined) return;
+
+  if (e.type === 'touchmove') {
+    moveX = e.touches[0].clientX - startX;
+    moveY = e.touches[0].clientY - startY;
+  } else {
+    moveX = e.clientX - startX;
+    moveY = e.clientY - startY;
+  }
+
+  card.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${moveX * 0.1}deg)`;
+}
+
+function dragEnd() {
+  if (moveX > 100) {
+    // Deslizar a la derecha: siguiente canción
+    playNext();
+  } else if (moveX < -100) {
+    // Deslizar a la izquierda: no me gusta
+    dislikeTrack();
+  } else if (moveY > 100) {
+    // Deslizar hacia abajo: guardar en playlist
+    saveToPlaylist();
+  }
+
+  card.style.transform = '';
+  startX = startY = moveX = moveY = undefined;
+}
+
 // Reproduce la siguiente canción automáticamente cuando termine la actual
 const audio = document.getElementById('track-audio');
 audio.addEventListener('ended', playNext);
@@ -152,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (accessToken) {
     document.getElementById('login-button').classList.add('hidden');
     document.getElementById('track').classList.remove('hidden');
-    document.getElementById('controls').classList.remove('hidden');
+    document.getElementById('instructions').classList.remove('hidden');
     loadMoreTracks().then(() => playNext());
   }
 });
