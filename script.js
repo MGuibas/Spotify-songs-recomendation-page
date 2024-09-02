@@ -7,8 +7,8 @@ let dislikedTracks = [];
 let history = [];
 
 // Configura tus credenciales de Spotify
-const clientId = 'YOUR_CLIENT_ID';  // Reemplaza con tu Client ID
-const redirectUri = 'YOUR_REDIRECT_URI';  // Reemplaza con tu Redirect URI
+const clientId = '3d46321079184aa3a9d9a93c74365225';  // Reemplaza con tu Client ID
+const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';  // Reemplaza con tu Redirect URI
 const scopes = [
   'playlist-read-private',
   'playlist-modify-private',
