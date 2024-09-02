@@ -30,19 +30,21 @@ async function fetchWebApi(endpoint, method, body) {
     const res = await fetch(`https://api.spotify.com/${endpoint}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
       },
       method,
-      body: JSON.stringify(body)
+      body: body ? JSON.stringify(body) : undefined
     });
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     const data = await res.json();
-    console.log(`Response from ${endpoint}:`, data); // Agrega esta línea para depurar
+    console.log(`Response from ${endpoint}:`, data); // Para depurar
     return data;
   } catch (error) {
     console.error('Error fetching API:', error);
     return null;
   }
 }
+
 
 
 async function getUserId() {
