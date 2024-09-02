@@ -35,12 +35,15 @@ async function fetchWebApi(endpoint, method, body) {
       body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    console.log(`Response from ${endpoint}:`, data); // Agrega esta línea para depurar
+    return data;
   } catch (error) {
     console.error('Error fetching API:', error);
     return null;
   }
 }
+
 
 async function getUserId() {
   if (!userId) {
@@ -141,6 +144,8 @@ function dislikeTrack() {
     playNext();
   }
 }
+
+
 
 // Reproduce la siguiente canción automáticamente cuando termine la actual
 const audio = document.getElementById('track-audio');
