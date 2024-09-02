@@ -73,6 +73,7 @@ async function getOrCreatePlaylist() {
   if (!playlistId) {
     const playlists = await fetchWebApi('me/playlists', 'GET');
     if (playlists) {
+      console.log('Playlists:', playlists);
       const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
       
       if (playlist) {
@@ -86,7 +87,7 @@ async function getOrCreatePlaylist() {
         });
         if (newPlaylist) {
           playlistId = newPlaylist.id;
-          console.log('Created new playlist:', playlistId);
+          console.log('Created new playlist:', newPlaylist);
         } else {
           console.error('Failed to create new playlist.');
         }
@@ -195,15 +196,13 @@ function dislikeTrack() {
   }
 }
 
-// Reproduce la siguiente canción automáticamente cuando termine la actual
 const audio = document.getElementById('track-audio');
 audio.addEventListener('ended', playNext);
 
-// Manejo del token y carga de canciones
 document.addEventListener('DOMContentLoaded', () => {
   accessToken = getAccessTokenFromUrl();
   if (!accessToken) {
-    login(); // Redirige a la página de inicio de sesión si no hay token
+    login();
   } else {
     document.getElementById('login-button').classList.add('hidden');
     document.getElementById('track').classList.remove('hidden');
