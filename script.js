@@ -1,216 +1,151 @@
-function login() {
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}`;
-  window.location.href = authUrl;
+:root {
+  --spotify-green: #1DB954;
+  --spotify-black: #191414;
 }
 
-let accessToken;
-let playlistId;
-let currentTrackIndex = -1;
-let tracks = [];
-let likedTracks = [];
-let dislikedTracks = [];
-let history = [];
-
-// Configura tus credenciales de Spotify
-const clientId = '3d46321079184aa3a9d9a93c74365225';  // Reemplaza con tu Client ID
-const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';  // Reemplaza con tu Redirect URI
-const scopes = [
-  'playlist-read-private',
-  'playlist-modify-private',
-  'user-top-read',
-  'user-library-read'
-];
-
-
-
-function getAccessTokenFromUrl() {
-  const params = new URLSearchParams(window.location.hash.replace('#', '?'));
-  return params.get('access_token');
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, var(--spotify-black), #121212);
+  color: white;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-async function fetchWebApi(endpoint, method, body) {
-  if (!accessToken) {
-    console.error('No access token available');
-    return null;
-  }
-  try {
-    const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      method,
-      body: body ? JSON.stringify(body) : undefined
-    });
-
-    // Verifica la respuesta
-    if (res.status === 401) {
-      console.error('Token expired or invalid. Please re-authenticate.');
-      window.location.href = `${redirectUri}?error=invalid_token`;
-      return null;
-    }
-    if (res.status === 429) {
-      // Espera antes de volver a intentar la solicitud
-      const retryAfter = res.headers.get('Retry-After') || 1; // Obtén el tiempo de espera recomendado o usa 1 segundo como valor predeterminado
-      console.warn(`Rate limit exceeded. Retrying in ${retryAfter} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return fetchWebApi(endpoint, method, body); // Reintenta la solicitud
-    }
-    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error('Error fetching API:', error);
-    return null;
-  }
+.container {
+  background-color: rgba(25, 20, 20, 0.8);
+  border-radius: 15px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-
-    // Verifica la respuesta
-    if (res.status === 401) {
-      console.error('Token expired or invalid. Please re-authenticate.');
-      window.location.href = `${redirectUri}?error=invalid_token`;
-      return null;
-    }
-    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error('Error fetching API:', error);
-    return null;
-  }
+.container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-async function getUserId() {
-  if (!userId) {
-    const userData = await fetchWebApi('me', 'GET');
-    if (userData) userId = userData.id;
-  }
-  return userId;
+#track {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-async function getOrCreatePlaylist() {
-  if (!playlistId) {
-    const playlists = await fetchWebApi('me/playlists', 'GET');
-    if (playlists) {
-      const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
-      
-      if (playlist) {
-        playlistId = playlist.id;
-      } else {
-        const newPlaylist = await fetchWebApi(`users/${await getUserId()}/playlists`, 'POST', {
-          name: 'Canciones Spotify TikTok',
-          description: 'Playlist creada automáticamente para canciones de la aplicación Spotify TikTok',
-          public: false
-        });
-        if (newPlaylist) playlistId = newPlaylist.id;
-      }
-    }
-  }
-  console.log('Playlist ID:', playlistId);  // Log playlist ID for debugging
-  return playlistId;
+#album-cover {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
-async function saveToPlaylist() {
-  const track = tracks[currentTrackIndex];
-  if (!track) return;
-  const playlist = await getOrCreatePlaylist();
-  await fetchWebApi(`playlists/${playlist}/tracks`, 'POST', {
-    uris: [track.uri]
-  });
-  console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
+#album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
 }
 
-async function getRecommendedTracks(seedTracks) {
-  if (seedTracks.length === 0) {
-    console.error('No seed tracks available to get recommendations.');
-    return [];
-  }
-
-  const seed = seedTracks.map(track => track.id).join(',');
-  try {
-    const recommendations = await fetchWebApi(`recommendations?limit=10&seed_tracks=${seed}`, 'GET');
-    if (recommendations) {
-      return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
-    }
-  } catch (error) {
-    console.error('Error getting recommended tracks:', error);
-  }
-  return [];
+#album-cover:hover img {
+  transform: scale(1.1);
 }
 
-async function loadMoreTracks() {
-  let seedTracks;
-  if (tracks.length > 0) {
-    seedTracks = tracks.slice(-5); // Obtén las últimas 5 pistas de la lista actual
-  } else {
-    const topTracks = await fetchWebApi('me/top/tracks?limit=5', 'GET');
-    seedTracks = topTracks ? topTracks.items : [];
-  }
-
-  seedTracks = [...seedTracks, ...likedTracks];
-  try {
-    const newTracks = await getRecommendedTracks(seedTracks);
-    tracks.push(...newTracks);
-  } catch (error) {
-    console.error('Error loading more tracks:', error);
-  }
+#track-name {
+  font-size: 24px;
+  margin-bottom: 5px;
+  color: var(--spotify-green);
 }
 
-async function playNext() {
-  currentTrackIndex++;
-  
-  if (currentTrackIndex >= tracks.length) {
-    await loadMoreTracks();
-  }
-
-  if (tracks[currentTrackIndex]) {
-    playTrack(tracks[currentTrackIndex]);
-    history.push(currentTrackIndex);
-  }
+#track-artist {
+  font-size: 18px;
+  color: #A0A0A0;
+  margin-bottom: 15px;
 }
 
-function playPrevious() {
-  if (history.length > 1) {
-    history.pop(); // Remove current track
-    currentTrackIndex = history[history.length - 1];
-    playTrack(tracks[currentTrackIndex]);
-  }
+#track-audio {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
-function playTrack(track) {
-  if (track && track.preview_url) {
-    document.getElementById('track-name').innerText = track.name;
-    document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
-    document.getElementById('album-image').src = track.album.images[0].url;
-    const audio = document.getElementById('track-audio');
-    audio.src = track.preview_url;
-    audio.play();
-  } else {
-    console.log('Track or preview URL not available.');
-  }
+#controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-function dislikeTrack() {
-  const track = tracks[currentTrackIndex];
-  if (track) {
-    dislikedTracks.push(track.id);
-    console.log(`Disliked: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
-    playNext();
-  }
+button {
+  background-color: var(--spotify-green);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-// Reproduce la siguiente canción automáticamente cuando termine la actual
-const audio = document.getElementById('track-audio');
-audio.addEventListener('ended', playNext);
+button:hover {
+  background-color: #1ed760;
+  transform: scale(1.05);
+}
 
-// Manejo del token y carga de canciones
-document.addEventListener('DOMContentLoaded', () => {
-  accessToken = getAccessTokenFromUrl();
-  if (!accessToken) {
-    login(); // Redirige a la página de inicio de sesión si no hay token
-  } else {
-    document.getElementById('login-button').classList.add('hidden');
-    document.getElementById('track').classList.remove('hidden');
-    document.getElementById('controls').classList.remove('hidden');
-    loadMoreTracks().then(() => playNext());
+button:active {
+  transform: scale(0.95);
+}
+
+#login-button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  margin-top: 20px;
+  background-color: #FFFFFF;
+  color: var(--spotify-black);
+}
+
+#login-button:hover {
+  background-color: #F0F0F0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 95%;
+    padding: 20px;
   }
-});
+
+  #controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 12px;
+  }
+
+  #album-cover {
+    width: 150px;
+    height: 150px;
+  }
+}
