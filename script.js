@@ -27,7 +27,7 @@ async function fetchWebApi(endpoint, method, body) {
     return null;
   }
   try {
-    const res = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
+    const res = await fetch(`https://api.spotify.com/${endpoint}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
