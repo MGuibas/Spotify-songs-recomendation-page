@@ -1,5 +1,5 @@
 const clientId = '3d46321079184aa3a9d9a93c74365225';
-const redirectUri = 'http://127.0.0.1:5500/spotify.html';
+const redirectUri = 'http://127.0.0.1:5500/index.html';
 const scopes = 'user-top-read user-read-recently-played playlist-modify-private playlist-read-private';
 
 let accessToken;
