@@ -4,7 +4,7 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Arial', sans-serif;
   background: linear-gradient(135deg, var(--spotify-black), #121212);
   color: white;
   height: 100vh;
@@ -72,6 +72,23 @@ body {
   color: var(--spotify-green);
 }
 
+#track-artist {
+  font-size: 18px;
+  color: #A0A0A0;
+  margin-bottom: 15px;
+}
+
+#track-audio {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
 #controls {
   display: flex;
   justify-content: space-between;
@@ -81,7 +98,7 @@ body {
 
 button {
   background-color: transparent;
-  color: white;
+  color: rgb(255, 255, 255);
   border: none;
   padding: 12px;
   border-radius: 50%;
@@ -102,7 +119,8 @@ button:active {
 }
 
 button i {
-  font-size: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 #play-pause-btn {
@@ -121,65 +139,43 @@ button i {
   color: var(--spotify-green);
 }
 
-/* Volume slider styles */
-.slider {
-  --slider-width: 100%;
-  --slider-height: 6px;
-  --slider-bg: rgb(82, 82, 82);
-  --slider-border-radius: 999px;
-  --level-color: #fff;
-  --level-transition-duration: .1s;
-  --icon-margin: 15px;
-  --icon-color: var(--slider-bg);
-  --icon-size: 25px;
+#volume-slider {
+  width: 400px;
+  margin-left: 0px;
+}
 
-  cursor: pointer;
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
+/* Add this new style for the volume slider */
+input[type="range"] {
+  -webkit-appearance: none;
   width: 100%;
-  margin-top: 20px;
-}
-
-.slider .volume {
-  margin-right: var(--icon-margin);
-  color: var(--icon-color);
-  width: var(--icon-size);
-  height: auto;
-}
-
-.slider .level {
-  -webkit-appearance: none;
-  appearance: none;
-  width: var(--slider-width);
-  height: var(--slider-height);
-  background: var(--slider-bg);
+  height: 5px;
+  border-radius: 5px;
+  background: #d3d3d3;
   outline: none;
-  border-radius: var(--slider-border-radius);
-  transition: height var(--level-transition-duration);
-  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity .2s;
 }
 
-.slider .level::-webkit-slider-thumb {
+input[type="range"]:hover {
+  opacity: 1;
+}
+
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  background: var(--level-color);
+  background: var(--spotify-green);
   cursor: pointer;
 }
 
-.slider .level::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  background: var(--level-color);
+  background: var(--spotify-green);
   cursor: pointer;
-}
-
-.slider:hover .level {
-  height: calc(var(--slider-height) * 2);
 }
 
 #login-button {
@@ -191,26 +187,10 @@ button i {
   background-color: #FFFFFF;
   color: var(--spotify-black);
   border-radius: 25px;
-  cursor: pointer;
 }
 
 #login-button:hover {
   background-color: #F0F0F0;
-}
-
-/* Artist search input styles */
-.input {
-  margin: 30px 0;
-  background: none;
-  border: none;
-  outline: none;
-  width: 100%;
-  max-width: 190px;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 9999px;
-  box-shadow: inset 2px 5px 10px rgb(5, 5, 5);
-  color: #fff;
 }
 
 #artist-form {
@@ -219,6 +199,15 @@ button i {
   flex-direction: column;
   align-items: center;
   position: relative;
+}
+
+#artist-input {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  text-align: center;
 }
 
 #artist-suggestions {
@@ -256,19 +245,6 @@ button i {
   animation: fadeIn 0.5s ease-out;
 }
 
-#credits {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  background-color: #333;
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 5px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-}
-
 @media (max-width: 480px) {
   .container {
     width: 95%;
@@ -287,19 +263,5 @@ button i {
   #album-cover {
     width: 150px;
     height: 150px;
-  }
-
-  .slider {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .slider .volume {
-    margin-right: 0;
-    margin-bottom: 10px;
-  }
-
-  .input {
-    max-width: 100%;
   }
 }
