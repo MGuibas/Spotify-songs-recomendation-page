@@ -1,10 +1,11 @@
 :root {
   --spotify-green: #1DB954;
   --spotify-black: #191414;
+  --spotify-gray: #535353;
 }
 
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Circular', 'Helvetica Neue', Arial, sans-serif;
   background: linear-gradient(135deg, var(--spotify-black), #121212);
   color: white;
   height: 100vh;
@@ -12,26 +13,48 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .container {
   background-color: rgba(25, 20, 20, 0.8);
-  border-radius: 15px;
-  padding: 30px;
+  border-radius: 20px;
+  padding: 40px;
   width: 90%;
-  max-width: 400px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  max-width: 450px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  z-index: 1;
 }
 
 .container:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+
+#vinyl-background {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200vw;
+  height: 200vw;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="%23191414" stroke="%23535353" stroke-width="0.5"/><circle cx="50" cy="50" r="20" fill="none" stroke="%23535353" stroke-width="0.5"/><circle cx="50" cy="50" r="3" fill="%23535353"/></svg>');
+  background-size: contain;
+  opacity: 0.1;
+  animation: spin 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 #track {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 #track-link {
@@ -46,46 +69,48 @@ body {
 }
 
 #album-cover {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 20px;
-  border-radius: 10px;
+  width: 250px;
+  height: 250px;
+  margin: 0 auto 30px;
+  border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
 }
 
 #album-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
 }
 
-#album-cover:hover img {
-  transform: scale(1.1);
+#album-cover:hover {
+  transform: rotate(5deg) scale(1.05);
+}
+
+#album-cover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+  pointer-events: none;
 }
 
 #track-name {
-  font-size: 24px;
-  margin-bottom: 5px;
+  font-size: 28px;
+  margin-bottom: 10px;
   color: var(--spotify-green);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 #track-artist {
-  font-size: 18px;
+  font-size: 20px;
   color: #A0A0A0;
-  margin-bottom: 15px;
-}
-
-#track-audio {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-#controls {
-  display: flex;
-  justify-content: space-between;
   margin-bottom: 20px;
 }
 
@@ -93,25 +118,27 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 button {
   background-color: transparent;
-  color: rgb(255, 255, 255);
+  color: white;
   border: none;
-  padding: 12px;
+  padding: 15px;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 button:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 button:active {
@@ -121,10 +148,12 @@ button:active {
 button i {
   width: 24px;
   height: 24px;
+  transition: all 0.3s ease;
 }
 
 #play-pause-btn {
   background-color: var(--spotify-green);
+  padding: 20px;
 }
 
 #play-pause-btn:hover {
@@ -140,17 +169,16 @@ button i {
 }
 
 #volume-slider {
-  width: 400px;
-  margin-left: 0px;
+  width: 100%;
+  margin-top: 20px;
 }
 
-/* Add this new style for the volume slider */
 input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
   height: 5px;
   border-radius: 5px;
-  background: #d3d3d3;
+  background: var(--spotify-gray);
   outline: none;
   opacity: 0.7;
   transition: opacity .2s;
@@ -163,19 +191,31 @@ input[type="range"]:hover {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--spotify-green);
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--spotify-green);
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
 }
 
 #login-button {
@@ -183,18 +223,24 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   padding: 15px;
   font-size: 18px;
-  margin-top: 20px;
-  background-color: #FFFFFF;
-  color: var(--spotify-black);
-  border-radius: 25px;
+  margin-top: 30px;
+  background-color: var(--spotify-green);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 #login-button:hover {
-  background-color: #F0F0F0;
+  background-color: #1ed760;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 #artist-form {
-  margin-top: 20px;
+  margin-top: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -203,11 +249,20 @@ input[type="range"]::-moz-range-thumb {
 
 #artist-input {
   width: 100%;
-  padding: 10px;
+  padding: 15px;
   border: none;
-  border-radius: 25px;
-  font-size: 14px;
+  border-radius: 30px;
+  font-size: 16px;
   text-align: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+#artist-input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 #artist-suggestions {
@@ -220,10 +275,11 @@ input[type="range"]::-moz-range-thumb {
   max-height: 200px;
   overflow-y: auto;
   z-index: 10;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 .artist-suggestion {
-  padding: 10px;
+  padding: 15px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -242,13 +298,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @media (max-width: 480px) {
   .container {
     width: 95%;
-    padding: 20px;
+    padding: 30px;
   }
 
   #controls {
@@ -257,11 +313,11 @@ input[type="range"]::-moz-range-thumb {
   }
 
   button {
-    margin: 5px;
+    margin: 10px;
   }
 
   #album-cover {
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
   }
 }
