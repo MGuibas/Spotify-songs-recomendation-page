@@ -56,7 +56,7 @@ async function getOrCreatePlaylist() {
   if (!playlistId) {
     const playlists = await fetchWebApi('v1/me/playlists', 'GET');
     if (playlists) {
-      const playlist = playlists.items.find(pl => pl.name === 'Canciones Spotify TikTok');
+      const playlist = playlists.items.find(pl => pl.name === 'Recomendaciones Spotify');
       
       if (playlist) {
         playlistId = playlist.id;
