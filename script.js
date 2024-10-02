@@ -84,7 +84,6 @@ async function saveToPlaylist() {
 }
 
 async function getRecommendedTracks(seedTracks) {
-  document.getElementById('vinyl-wrapper').style.display = 'none'; //para pasar de pagina q cambie
   const seed = seedTracks.map(track => track.id).join(',');
   try {
     const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
@@ -142,6 +141,7 @@ function playTrack(track) {
 }
 
 function updatePlayPauseButton() {
+  document.getElementById('vinyl-wrapper').style.display = 'none'; //para pasar de pagina q cambie
   const playPauseBtn = document.getElementById('play-pause-btn');
   if (audio.paused) {
     playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
