@@ -11,7 +11,7 @@ let likedTracks = [];
 let dislikedTracks = [];
 let history = [];
 let audio = new Audio();
-
+//
 function login() {
   console.log('Login function called'); 
   const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
