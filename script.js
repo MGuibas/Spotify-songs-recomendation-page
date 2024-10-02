@@ -13,6 +13,7 @@ let history = [];
 let audio = new Audio();
 
 function login() {
+  console.log('Login function called'); // Add this line
   const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
   window.location.href = authUrl;
 }
