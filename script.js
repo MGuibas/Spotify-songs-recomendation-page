@@ -63,7 +63,7 @@ async function getOrCreatePlaylist() {
       } else {
         const newPlaylist = await fetchWebApi(`v1/users/${await getUserId()}/playlists`, 'POST', {
           name: 'Recomendaciones Spotify',
-          description: 'Playlist creada automáticamente para canciones de la aplicación Spotify TikTok',
+          description: 'Playlist creada automáticamente para canciones de la web que ha hecho marquitos, Miau',
           public: false
         });
         if (newPlaylist) playlistId = newPlaylist.id;
