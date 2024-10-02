@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify TikTok</title>
+    <title>Spotify Song Recommendations</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <div id="vinyl-background"></div>
     <div class="container">
         <div id="track" class="hidden fade-in">
             <a id="track-link" target="_blank">
@@ -21,16 +20,16 @@
         </div>
 
         <div id="controls" class="hidden fade-in">
-            <button id="dislike-btn"><i class="fas fa-thumbs-down"></i></button>
             <button id="prev-btn"><i class="fas fa-step-backward"></i></button>
             <button id="play-pause-btn"><i class="fas fa-play"></i></button>
             <button id="next-btn"><i class="fas fa-step-forward"></i></button>
+            <button id="dislike-btn"><i class="fas fa-thumbs-down"></i></button>
             <button id="save-btn"><i class="fas fa-heart"></i></button>
         </div>
 
         <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
 
-        <button id="login-button">Login with Spotify</button>
+        <button id="login-button" onclick="login()">Login with Spotify</button>
 
         <div id="artist-form" class="hidden fade-in">
             <input type="text" id="artist-input" placeholder="Search for an artist...">
@@ -43,7 +42,5 @@
     </div>
 
     <script src="script.js"></script>
-</body>
-</html>t>
 </body>
 </html>
