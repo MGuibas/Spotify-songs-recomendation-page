@@ -16,7 +16,6 @@ function login() {
   console.log('Login function called'); // Add this line
   const authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
   window.location.href = authUrl;
-  document.getElementById('vinyl-wrapper').style.display = 'none'; //para pasar de pagina q cambie
 }
 
 function getAccessTokenFromUrl() {
@@ -54,6 +53,7 @@ async function getUserId() {
 }
 
 async function getOrCreatePlaylist() {
+  document.getElementById('vinyl-wrapper').style.display = 'none'; //para pasar de pagina q cambie
   if (!playlistId) {
     const playlists = await fetchWebApi('v1/me/playlists', 'GET');
     if (playlists) {
