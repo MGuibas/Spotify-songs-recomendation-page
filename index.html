@@ -28,37 +28,6 @@
             flex-direction: column;
         }
 
-        #search-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            background-color: rgba(25, 20, 20, 0.8);
-        }
-
-        #artist-input {
-            width: 60%;
-            padding: 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-
-        #search-btn {
-            background-color: var(--spotify-green);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        #search-btn:hover {
-            background-color: #1aa34a;
-        }
-
         #track-container {
             flex-grow: 1;
             display: flex;
@@ -160,12 +129,6 @@
 </head>
 <body>
     <div id="app">
-        <!-- Campo para buscar canciones similares -->
-        <div id="search-container">
-            <input type="text" id="artist-input" placeholder="Buscar por grupo o artista">
-            <button id="search-btn">Buscar recomendaciones</button>
-        </div>
-
         <div id="track-container">
             <div class="track">
                 <img id="album-cover" src="/placeholder.svg" alt="Album Cover">
@@ -184,7 +147,6 @@
         </div>
         <button id="login-button">Login with Spotify</button>
     </div>
-
     <script>
         const clientId = 'b6a4fbf9f4fc4646b8862fc9d157d071';
         const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
@@ -280,79 +242,144 @@
             return [];
         }
 
-        function playTrack(track) {
-            audio.src = track.preview_url;
-            audio.play();
-            document.getElementById('track-name').textContent = track.name;
-            document.getElementById('track-artist').textContent = track.artists.map(artist => artist.name).join(', ');
-            document.getElementById('album-cover').src = track.album.images[0]?.url || '/placeholder.svg';
-            document.getElementById('like-btn').classList.remove('hidden');
-            document.getElementById('dislike-btn').classList.remove('hidden');
+        async function loadMoreTracks() {
+            let seedTracks = tracks.length > 0 ? tracks.slice(-5) : await fetchWebApi('v1/me/top/tracks?limit=5', 'GET').then(data => data.items);
+            seedTracks = [...seedTracks, ...likedTracks];
+            const newTracks = await getRecommendedTracks(seedTracks);
+            tracks.push(...newTracks);
         }
 
-        function playNext() {
+        async function playNext() {
             currentTrackIndex++;
-            if (currentTrackIndex < tracks.length) {
+            
+            if (currentTrackIndex >= tracks.length) {
+                await loadMoreTracks();
+            }
+
+            if (tracks[currentTrackIndex]) {
                 playTrack(tracks[currentTrackIndex]);
-            } else {
-                document.getElementById('like-btn').classList.add('hidden');
-                document.getElementById('dislike-btn').classList.add('hidden');
-                document.getElementById('track-name').textContent = 'No hay más recomendaciones';
-                document.getElementById('track-artist').textContent = '';
-                document.getElementById('album-cover').src = '/placeholder.svg';
             }
         }
 
-        async function searchForArtist(artistName) {
-            try {
-                const searchResult = await fetchWebApi(`v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`, 'GET');
-                const artist = searchResult.artists.items[0];
-                if (!artist) {
-                    alert("Artista no encontrado");
-                    return;
-                }
-                const topTracks = await fetchWebApi(`v1/artists/${artist.id}/top-tracks?market=US`, 'GET');
-                if (topTracks) {
-                    const seedTracks = topTracks.tracks.slice(0, 5).map(track => track.id);
-                    const recommendedTracks = await getRecommendedTracks(seedTracks);
-                    tracks = recommendedTracks;
-                    currentTrackIndex = -1;
-                    playNext();
-                }
-            } catch (error) {
-                console.error('Error fetching artist recommendations:', error);
+        function playPrevious() {
+            if (currentTrackIndex > 0) {
+                currentTrackIndex--;
+                playTrack(tracks[currentTrackIndex]);
             }
         }
 
-        document.getElementById('login-button').addEventListener('click', login);
-
-        document.getElementById('like-btn').addEventListener('click', () => {
-            likedTracks.push(tracks[currentTrackIndex].id);
-            saveToPlaylist();
-            playNext();
-        });
-
-        document.getElementById('dislike-btn').addEventListener('click', () => {
-            dislikedTracks.push(tracks[currentTrackIndex].id);
-            playNext();
-        });
-
-        document.getElementById('search-btn').addEventListener('click', () => {
-            const artistName = document.getElementById('artist-input').value;
-            if (artistName) {
-                searchForArtist(artistName);
+        function playTrack(track) {
+            if (track && track.preview_url) {
+                document.getElementById('track-name').innerText = track.name;
+                document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
+                document.getElementById('album-cover').src = track.album.images[0].url;
+                
+                audio.src = track.preview_url;
+                audio.play();
+                updatePlayPauseButton();
             } else {
-                alert("Por favor, ingresa el nombre de un artista.");
+                console.log('Track or preview URL not available.');
             }
-        });
+        }
 
-        window.addEventListener('load', () => {
+        function updatePlayPauseButton() {
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            if (audio.paused) {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+        }
+
+        function togglePlayPause() {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+            updatePlayPauseButton();
+        }
+
+        function likeTrack() {
+            const track = tracks[currentTrackIndex];
+            if (track) {
+                likedTracks.push(track.id);
+                saveToPlaylist();
+                playNext();
+            }
+        }
+
+        function dislikeTrack() {
+            const track = tracks[currentTrackIndex];
+            if (track) {
+                dislikedTracks.push(track.id);
+                playNext();
+            }
+        }
+
+        let startY;
+        let currentY;
+
+        function handleTouchStart(e) {
+            startY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            if (!startY) return;
+            currentY = e.touches[0].clientY;
+            const diffY = currentY - startY;
+            const trackContainer = document.querySelector('.track');
+            trackContainer.style.transform = `translateY(${diffY}px)`;
+        }
+
+        function handleTouchEnd() {
+            if (!startY || !currentY) return;
+            const diffY = currentY - startY;
+            const trackContainer = document.querySelector('.track');
+            if (diffY < -50) {
+                playNext();
+            } else if (diffY > 50) {
+                playPrevious();
+            }
+            trackContainer.style.transform = '';
+            startY = null;
+            currentY = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
             accessToken = getAccessTokenFromUrl();
+            
             if (accessToken) {
                 document.getElementById('login-button').classList.add('hidden');
                 document.getElementById('controls').classList.remove('hidden');
                 document.getElementById('like-btn').classList.remove('hidden');
                 document.getElementById('dislike-btn').classList.remove('hidden');
+
+                try {
+                    await getOrCreatePlaylist();
+                    await loadMoreTracks();
+                    playNext();
+
+                    document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
+                    document.getElementById('prev-btn').addEventListener('click', playPrevious);
+                    document.getElementById('next-btn').addEventListener('click', playNext);
+                    document.getElementById('like-btn').addEventListener('click', likeTrack);
+                    document.getElementById('dislike-btn').addEventListener('click', dislikeTrack);
+
+                    const trackContainer = document.getElementById('track-container');
+                    trackContainer.addEventListener('touchstart', handleTouchStart);
+                    trackContainer.addEventListener('touchmove', handleTouchMove);
+                    trackContainer.addEventListener('touchend', handleTouchEnd);
+
+                    audio.addEventListener('ended', () => {
+                        updatePlayPauseButton();
+                        playNext();
+                    });
+                } catch (error) {
+                    console.error('Error during initialization:', error);
+                }
+            } else {
+                document.getElementById('login-button').addEventListener('click', login);
             }
         });
     </script>
