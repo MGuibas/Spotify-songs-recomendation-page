@@ -125,45 +125,10 @@
         .hidden {
             display: none !important;
         }
-        #artist-form {
-            padding: 20px;
-            background-color: var(--spotify-gray);
-        }
-        
-        #artist-input {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-        
-        #artist-suggestions {
-            background-color: var(--spotify-black);
-            border: 1px solid var(--spotify-green);
-            border-radius: 5px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        
-        .artist-suggestion {
-            padding: 10px;
-            cursor: pointer;
-        }
-        
-        .artist-suggestion:hover {
-            background-color: var(--spotify-gray);
-        }
-
     </style>
 </head>
 <body>
     <div id="app">
-        <div id="artist-form" class="hidden">
-            <input type="text" id="artist-input" placeholder="Search for an artist" />
-            <div id="artist-suggestions" class="hidden"></div>
-        </div>
         <div id="track-container">
             <div class="track">
                 <img id="album-cover" src="/placeholder.svg" alt="Album Cover">
