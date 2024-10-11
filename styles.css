@@ -134,6 +134,8 @@ body, html {
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
   transition: all 0.3s ease;
+  position: relative;
+  margin-left: -100px;
 }
 
 
