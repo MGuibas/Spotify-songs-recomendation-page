@@ -9,10 +9,6 @@
 </head>
 <body>
     <div id="app">
-        <form id="artist-form" class="hidden">
-            <input type="text" id="artist-input" placeholder="Buscar artista...">
-            <div id="artist-suggestions" class="hidden"></div>
-        </form>
         <div id="track-container">
             <div class="track">
                 <img id="album-cover" src="/placeholder.svg" alt="Album Cover">
@@ -22,8 +18,11 @@
                 </div>
             </div>
         </div>
-    
         
+        <form id="artist-form" class="hidden">
+            <input type="text" id="artist-input" placeholder="Buscar artista...">
+            <div id="artist-suggestions" class="hidden"></div>
+        </form>
     
         <div id="controls" class="hidden">
             <button id="prev-btn" class="control-btn"><i class="fas fa-step-backward"></i></button>
