@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Recommendations</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <style></style>
 </head>
 <body>
     <div id="app">
+        <form id="artist-form" class="hidden">
+            <input type="text" id="artist-input" placeholder="Buscar artista...">
+            <div id="artist-suggestions" class="hidden"></div>
+        </form>
+        
         <div id="track-container">
             <div class="track">
-                <img id="album-cover" src="/placeholder.svg" alt="Album Cover">
+                <img id="album-cover" src="/api/placeholder/300/300" alt="Album Cover">
                 <div id="track-info">
                     <div id="track-name"></div>
                     <div id="track-artist"></div>
                 </div>
             </div>
         </div>
-        
-        <form id="artist-form" class="hidden">
-            <input type="text" id="artist-input" placeholder="Buscar artista...">
-            <div id="artist-suggestions" class="hidden"></div>
-        </form>
     
         <div id="controls" class="hidden">
             <button id="prev-btn" class="control-btn"><i class="fas fa-step-backward"></i></button>
