@@ -117,6 +117,7 @@ body, html {
 #artist-form {
   position: absolute;
   top: 20px;
+  margin-left: -180px; /* Ajusta este valor según sea necesario */
   left: 50%;
   transform: translateX(-50%);
   width: 80%;
@@ -136,10 +137,6 @@ body, html {
   transition: all 0.3s ease;
 }
 
-artist-input-container {
-    position: relative;
-    margin-left: -180px; /* Ajusta este valor según sea necesario */
-}
 
 #artist-input:focus {
   outline: none;
