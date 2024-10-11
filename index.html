@@ -165,8 +165,13 @@
         }
         function getAccessTokenFromUrl() {
             const params = new URLSearchParams(window.location.hash.replace('#', '?'));
-            return params.get('access_token');
+            const token = params.get('access_token');
+            if (token) {
+                accessToken = token;
+            }
+            return accessToken;
         }
+
         async function fetchWebApi(endpoint, method, body) {
             if (!accessToken) {
                 console.error('No access token available');
