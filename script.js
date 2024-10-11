@@ -58,7 +58,7 @@ async function getOrCreatePlaylist() {
         const playlists = await fetchWebApi('v1/me/playlists', 'GET');
         if (playlists) {
             const playlist = playlists.items.find(pl => pl.name === 'Recomendaciones Spotify');
-            
+
             if (playlist) {
                 playlistId = playlist.id;
             } else {
@@ -95,7 +95,6 @@ async function getRecommendedTracks(seedTracks) {
     return [];
 }
 
-
 async function loadMoreTracks() {
     let newTracks = [];
     if (tracks.length > 0) {
@@ -103,35 +102,24 @@ async function loadMoreTracks() {
         const seedTracks = tracks.slice(-5);
         newTracks = await getRecommendedTracks(seedTracks);
     } else {
-        // Si no hay pistas, obtener las principales pistas del usuario
-        const topTracks = await fetchWebApi('v1/me/top/tracks?limit=50', 'GET').then(data => data.items);
-        newTracks = shuffleArray(topTracks.filter(track => track.preview_url)).slice(0, 20);
+        const artistId = tracks[0]?.artists[0]?.id;
+        if (artistId) {
+            newTracks = await getRecommendedTracksForArtist(artistId);
+        } else {
+            newTracks = await fetchWebApi('v1/me/top/tracks?limit=10', 'GET').then(data => data.items);
+        }
     }
     
-    // Filtrar las pistas que ya están en la lista actual
-    newTracks = newTracks.filter(track => !tracks.some(t => t.id === track.id));
-    
-    // Añadir las nuevas pistas a la lista actual
     tracks.push(...newTracks);
     
-    // Limitar la lista a un máximo de 50 pistas para evitar un crecimiento excesivo
-    if (tracks.length > 50) {
-        tracks = tracks.slice(-50);
-    }
 }
 async function playNext() {
     currentTrackIndex++;
-    
-    // Si estamos cerca del final de la lista, cargar más pistas
-    if (currentTrackIndex >= tracks.length - 5) {
+
+    if (currentTrackIndex >= tracks.length) {
         await loadMoreTracks();
     }
-    
     if (tracks[currentTrackIndex]) {
-        playTrack(tracks[currentTrackIndex]);
-    } else {
-        // Si no hay más pistas, volver al principio
-        currentTrackIndex = 0;
         playTrack(tracks[currentTrackIndex]);
     }
 }
@@ -148,7 +136,7 @@ function playTrack(track) {
         document.getElementById('track-name').innerText = track.name;
         document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
         document.getElementById('album-cover').src = track.album.images[0].url;
-        
+
         audio.src = track.preview_url;
         audio.play();
         updatePlayPauseButton();
@@ -242,10 +230,10 @@ function displayArtistSuggestions(artists) {
 async function selectArtist(artist) {
     document.getElementById('artist-input').value = artist.name;
     document.getElementById('artist-suggestions').classList.add('hidden');
-    
+
     const topTracks = await fetchWebApi(`v1/artists/${artist.id}/top-tracks?market=US`, 'GET');
     if (topTracks && topTracks.tracks) {
-        tracks = shuffleArray(topTracks.tracks.filter(track => track.preview_url));
+        tracks = topTracks.tracks.filter(track => track.preview_url);
         currentTrackIndex = -1;
         playNext();
     }
@@ -262,14 +250,12 @@ async function getRecommendedTracksForArtist(artistId) {
 
 document.addEventListener('DOMContentLoaded', async () => {
     accessToken = getAccessTokenFromUrl();
-    
+
     if (accessToken) {
         document.getElementById('login-button').classList.add('hidden');
         document.getElementById('controls').classList.remove('hidden');
         document.getElementById('like-btn').classList.remove('hidden');
         document.getElementById('dislike-btn').classList.remove('hidden');
-        await loadMoreTracks();
-        playNext();
         document.getElementById('artist-form').classList.remove('hidden');
         const artistInput = document.getElementById('artist-input');
         artistInput.addEventListener('input', async (e) => {
