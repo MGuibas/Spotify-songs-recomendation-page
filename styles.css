@@ -136,6 +136,11 @@ body, html {
   transition: all 0.3s ease;
 }
 
+artist-input-container {
+    position: relative;
+    margin-left: -20px; /* Ajusta este valor según sea necesario */
+}
+
 #artist-input:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.2);
