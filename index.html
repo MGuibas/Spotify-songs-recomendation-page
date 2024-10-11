@@ -125,11 +125,64 @@
         .hidden {
             display: none !important;
         }
+
+        #search-container {
+            padding: 10px;
+            background-color: var(--spotify-gray);
+        }
+
+        #search-toggle {
+            background-color: var(--spotify-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #artist-search {
+            margin-top: 10px;
+        }
+
+        #artist-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background-color: white;
+            color: var(--spotify-black);
+        }
+
+        #artist-suggestions {
+            background-color: white;
+            border-radius: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .artist-suggestion {
+            padding: 10px;
+            cursor: pointer;
+            color: var(--spotify-black);
+        }
+
+        .artist-suggestion:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <div id="track-container">
+        <div id="search-container">
+            <button id="search-toggle">Search Artist</button>
+            <div id="artist-search" class="hidden">
+                <input type="text" id="artist-input" placeholder="Search for an artist...">
+                <div id="artist-suggestions" class="hidden"></div>
+            </div>
+        </div>
+        <div id="track-container" class="hidden">
             <div class="track">
                 <img id="album-cover" src="/placeholder.svg" alt="Album Cover">
                 <div id="track-info">
@@ -317,33 +370,65 @@
             }
         }
 
-        let startY;
-        let currentY;
-
-        function handleTouchStart(e) {
-            startY = e.touches[0].clientY;
+        async function searchArtists(query) {
+            if (query.trim() === '') return [];
+            const response = await fetchWebApi(`v1/search?q=${encodeURIComponent(query)}&type=artist&limit=5`, 'GET');
+            return response.artists.items;
         }
 
-        function handleTouchMove(e) {
-            if (!startY) return;
-            currentY = e.touches[0].clientY;
-            const diffY = currentY - startY;
-            const trackContainer = document.querySelector('.track');
-            trackContainer.style.transform = `translateY(${diffY}px)`;
-        }
-
-        function handleTouchEnd() {
-            if (!startY || !currentY) return;
-            const diffY = currentY - startY;
-            const trackContainer = document.querySelector('.track');
-            if (diffY < -50) {
+        async function fetchRecommendationsByArtist(artistId) {
+            const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_artists=${artistId}`, 'GET');
+            if (recommendations && recommendations.tracks) {
+                tracks = recommendations.tracks.filter(track => track.preview_url);
+                currentTrackIndex = -1;
                 playNext();
-            } else if (diffY > 50) {
-                playPrevious();
+            } else {
+                console.log('No recommendations found for this artist.');
             }
-            trackContainer.style.transform = '';
-            startY = null;
-            currentY = null;
+        }
+
+        let debounceTimer;
+
+        function setupArtistSearch() {
+            const artistInput = document.getElementById('artist-input');
+            const artistSuggestions = document.getElementById('artist-suggestions');
+
+            artistInput.addEventListener('input', async (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async () => {
+                    const query = e.target.value;
+                    if (query) {
+                        const suggestions = await searchArtists(query);
+                        displayArtistSuggestions(suggestions);
+                    } else {
+                        artistSuggestions.innerHTML = '';
+                        artistSuggestions.classList.add('hidden');
+                    }
+                }, 300);
+            });
+        }
+
+        function displayArtistSuggestions(suggestions) {
+            const artistSuggestions = document.getElementById('artist-suggestions');
+            artistSuggestions.innerHTML = '';
+
+            if (suggestions.length > 0) {
+                suggestions.forEach(artist => {
+                    const div = document.createElement('div');
+                    div.className = 'artist-suggestion';
+                    div.textContent = artist.name;
+                    div.addEventListener('click', () => {
+                        fetchRecommendationsByArtist(artist.id);
+                        document.getElementById('artist-input').value = '';
+                        artistSuggestions.innerHTML = '';
+                        artistSuggestions.classList.add('hidden');
+                    });
+                    artistSuggestions.appendChild(div);
+                });
+                artistSuggestions.classList.remove('hidden');
+            } else {
+                artistSuggestions.classList.add('hidden');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -351,37 +436,5 @@
             
             if (accessToken) {
                 document.getElementById('login-button').classList.add('hidden');
+                document.getElementById('track-container').classList.remove('hidden');
                 document.getElementById('controls').classList.remove('hidden');
-                document.getElementById('like-btn').classList.remove('hidden');
-                document.getElementById('dislike-btn').classList.remove('hidden');
-
-                try {
-                    await getOrCreatePlaylist();
-                    await loadMoreTracks();
-                    playNext();
-
-                    document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
-                    document.getElementById('prev-btn').addEventListener('click', playPrevious);
-                    document.getElementById('next-btn').addEventListener('click', playNext);
-                    document.getElementById('like-btn').addEventListener('click', likeTrack);
-                    document.getElementById('dislike-btn').addEventListener('click', dislikeTrack);
-
-                    const trackContainer = document.getElementById('track-container');
-                    trackContainer.addEventListener('touchstart', handleTouchStart);
-                    trackContainer.addEventListener('touchmove', handleTouchMove);
-                    trackContainer.addEventListener('touchend', handleTouchEnd);
-
-                    audio.addEventListener('ended', () => {
-                        updatePlayPauseButton();
-                        playNext();
-                    });
-                } catch (error) {
-                    console.error('Error during initialization:', error);
-                }
-            } else {
-                document.getElementById('login-button').addEventListener('click', login);
-            }
-        });
-    </script>
-</body>
-</html>
