@@ -115,18 +115,18 @@ body, html {
 }
 
 #artist-form {
-  margin-top: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
 }
 
 #artist-input {
   width: 100%;
-  padding: 15px;
+  padding: 12px;
   border: none;
-  border-radius: 30px;
+  border-radius: 20px;
   font-size: 16px;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.1);
@@ -137,7 +137,7 @@ body, html {
 #artist-input:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 #artist-suggestions {
@@ -150,11 +150,11 @@ body, html {
   max-height: 200px;
   overflow-y: auto;
   z-index: 10;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .artist-suggestion {
-  padding: 15px;
+  padding: 12px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
