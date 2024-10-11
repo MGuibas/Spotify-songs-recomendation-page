@@ -18,18 +18,21 @@
                 </div>
             </div>
         </div>
-        <button id="like-btn" class="control-btn hidden"><i class="fas fa-heart"></i></button>
-        <button id="dislike-btn" class="control-btn hidden"><i class="fas fa-times"></i></button>
-        <div id="artist-form" class="hidden">
-            <input type="text" id="artist-input" placeholder="Search for an artist...">
+    
+        <form id="artist-form" class="hidden">
+            <input type="text" id="artist-input" placeholder="Buscar artista...">
             <div id="artist-suggestions" class="hidden"></div>
-        </div>
+        </form>
+    
         <div id="controls" class="hidden">
             <button id="prev-btn" class="control-btn"><i class="fas fa-step-backward"></i></button>
             <button id="play-pause-btn" class="control-btn"><i class="fas fa-play"></i></button>
             <button id="next-btn" class="control-btn"><i class="fas fa-step-forward"></i></button>
         </div>
+    
         <button id="login-button">Login with Spotify</button>
+        <button id="like-btn" class="hidden"><i class="fas fa-heart"></i></button>
+        <button id="dislike-btn" class="hidden"><i class="fas fa-thumbs-down"></i></button>
     </div>
     <script src="script.js"></script>
 </body>
