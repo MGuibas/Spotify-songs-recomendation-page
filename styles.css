@@ -115,11 +115,11 @@ body, html {
 
 #artist-form {
     position: fixed;
-    top: 20px;
-    left: 0;
+    top: 5px;
+    left: 10%;
     right: 0;
-    width: 50%;
-    max-width: 200px;
+    width: 80%;
+    max-width: 250px;
     margin: 0 auto;
     z-index: 10;
 }
