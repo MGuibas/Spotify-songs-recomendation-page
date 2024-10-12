@@ -329,6 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('like-btn').classList.remove('hidden');
         document.getElementById('dislike-btn').classList.remove('hidden');
         document.getElementById('artist-form').classList.remove('hidden');
+
         const artistInput = document.getElementById('artist-input');
         artistInput.addEventListener('input', async (e) => {
             const query = e.target.value;
@@ -339,19 +340,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('artist-suggestions').classList.add('hidden');
             }
         });
+
         try {
             await getOrCreatePlaylist();
             await loadMoreTracks();
             playNext();
+
             document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
             document.getElementById('prev-btn').addEventListener('click', playPrevious);
             document.getElementById('next-btn').addEventListener('click', playNext);
             document.getElementById('like-btn').addEventListener('click', likeTrack);
             document.getElementById('dislike-btn').addEventListener('click', dislikeTrack);
+
             const trackContainer = document.getElementById('track-container');
             trackContainer.addEventListener('touchstart', handleTouchStart);
             trackContainer.addEventListener('touchmove', handleTouchMove);
             trackContainer.addEventListener('touchend', handleTouchEnd);
+
             audio.addEventListener('ended', () => {
                 updatePlayPauseButton();
                 playNext();
