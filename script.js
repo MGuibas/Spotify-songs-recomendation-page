@@ -8,8 +8,6 @@ let currentTrackIndex = -1;
 let tracks = [];
 let likedTracks = [];
 let dislikedTracks = [];
-let likedGenres = [];
-let dislikedGenres = [];
 let audio = new Audio();
 
 function login() {
@@ -86,19 +84,11 @@ async function saveToPlaylist() {
     console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
 }
 
-async function getRecommendedTracks(seedTracks, seedArtists = [], seedGenres = []) {
-    const seed_tracks = seedTracks.map(track => track.id).join(',');
-    const seed_artists = seedArtists.join(',');
-    const seed_genres = [...new Set([...seedGenres, ...likedGenres])].slice(0, 5).join(',');
+async function getRecommendedTracks(seedTracks) {
+    const seed = seedTracks.map(track => track.id).join(',');
     try {
-        const recommendations = await fetchWebApi(`v1/recommendations?limit=20&seed_tracks=${seed_tracks}&seed_artists=${seed_artists}&seed_genres=${seed_genres}`, 'GET');
-        if (recommendations) {
-            return recommendations.tracks.filter(track => 
-                track.preview_url && 
-                !dislikedTracks.includes(track.id) &&
-                !dislikedGenres.some(genre => track.artists.some(artist => artist.genres && artist.genres.includes(genre)))
-            );
-        }
+        const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
+        if (recommendations) return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
     } catch (error) {
         console.error('Error getting recommended tracks:', error);
     }
@@ -108,25 +98,21 @@ async function getRecommendedTracks(seedTracks, seedArtists = [], seedGenres = [
 async function loadMoreTracks() {
     let newTracks = [];
     if (tracks.length > 0) {
+        // Usar las últimas 5 pistas reproducidas como semillas
         const seedTracks = tracks.slice(-5);
-        const seedArtists = [...new Set(tracks.flatMap(track => track.artists.map(artist => artist.id)))].slice(0, 2);
-        const seedGenres = await getTopGenres(seedArtists);
-        newTracks = await getRecommendedTracks(seedTracks, seedArtists, seedGenres);
+        newTracks = await getRecommendedTracks(seedTracks);
     } else {
-        const topTracks = await fetchWebApi('v1/me/top/tracks?limit=5', 'GET').then(data => data.items);
-        const topArtists = await fetchWebApi('v1/me/top/artists?limit=2', 'GET').then(data => data.items);
-        const topGenres = topArtists.flatMap(artist => artist.genres).slice(0, 2);
-        newTracks = await getRecommendedTracks(topTracks, topArtists.map(artist => artist.id), topGenres);
+        const artistId = tracks[0]?.artists[0]?.id;
+        if (artistId) {
+            newTracks = await getRecommendedTracksForArtist(artistId);
+        } else {
+            newTracks = await fetchWebApi('v1/me/top/tracks?limit=10', 'GET').then(data => data.items);
+        }
     }
     
     tracks.push(...newTracks);
+    
 }
-async function getTopGenres(artistIds) {
-    const artists = await Promise.all(artistIds.map(id => fetchWebApi(`v1/artists/${id}`, 'GET')));
-    const genres = artists.flatMap(artist => artist.genres);
-    return [...new Set(genres)].slice(0, 2);
-}
-
 async function playNext() {
     currentTrackIndex++;
 
@@ -177,30 +163,21 @@ function togglePlayPause() {
     updatePlayPauseButton();
 }
 
-async function likeTrack() {
+function likeTrack() {
     const track = tracks[currentTrackIndex];
     if (track) {
         likedTracks.push(track.id);
-        const artistGenres = await getArtistGenres(track.artists[0].id);
-        likedGenres = [...new Set([...likedGenres, ...artistGenres])];
         saveToPlaylist();
         playNext();
     }
 }
 
-async function dislikeTrack() {
+function dislikeTrack() {
     const track = tracks[currentTrackIndex];
     if (track) {
         dislikedTracks.push(track.id);
-        const artistGenres = await getArtistGenres(track.artists[0].id);
-        dislikedGenres = [...new Set([...dislikedGenres, ...artistGenres])];
         playNext();
     }
-}
-
-async function getArtistGenres(artistId) {
-    const artist = await fetchWebApi(`v1/artists/${artistId}`, 'GET');
-    return artist.genres || [];
 }
 
 let startY;
