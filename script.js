@@ -8,6 +8,9 @@ let currentTrackIndex = -1;
 let tracks = [];
 let likedTracks = [];
 let dislikedTracks = [];
+let likedGenres = [];
+let dislikedGenres = [];
+let playedTracks = [];
 let audio = new Audio();
 
 function login() {
@@ -84,11 +87,20 @@ async function saveToPlaylist() {
     console.log(`Saved to playlist: ${track.name} by ${track.artists.map(artist => artist.name).join(', ')}`);
 }
 
-async function getRecommendedTracks(seedTracks) {
-    const seed = seedTracks.map(track => track.id).join(',');
+async function getRecommendedTracks(seedTracks, seedArtists = [], seedGenres = []) {
+    const seed_tracks = seedTracks.map(track => track.id).join(',');
+    const seed_artists = seedArtists.join(',');
+    const seed_genres = [...new Set([...seedGenres, ...likedGenres])].slice(0, 5).join(',');
     try {
-        const recommendations = await fetchWebApi(`v1/recommendations?limit=10&seed_tracks=${seed}`, 'GET');
-        if (recommendations) return recommendations.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
+        const recommendations = await fetchWebApi(`v1/recommendations?limit=50&seed_tracks=${seed_tracks}&seed_artists=${seed_artists}&seed_genres=${seed_genres}`, 'GET');
+        if (recommendations) {
+            return recommendations.tracks.filter(track => 
+                track.preview_url && 
+                !dislikedTracks.includes(track.id) &&
+                !dislikedGenres.some(genre => track.artists.some(artist => artist.genres && artist.genres.includes(genre))) &&
+                !playedTracks.includes(track.id)
+            );
+        }
     } catch (error) {
         console.error('Error getting recommended tracks:', error);
     }
@@ -98,21 +110,28 @@ async function getRecommendedTracks(seedTracks) {
 async function loadMoreTracks() {
     let newTracks = [];
     if (tracks.length > 0) {
-        // Usar las últimas 5 pistas reproducidas como semillas
         const seedTracks = tracks.slice(-5);
-        newTracks = await getRecommendedTracks(seedTracks);
+        const seedArtists = [...new Set(tracks.flatMap(track => track.artists.map(artist => artist.id)))].slice(0, 2);
+        const seedGenres = await getTopGenres(seedArtists);
+        newTracks = await getRecommendedTracks(seedTracks, seedArtists, seedGenres);
     } else {
-        const artistId = tracks[0]?.artists[0]?.id;
-        if (artistId) {
-            newTracks = await getRecommendedTracksForArtist(artistId);
-        } else {
-            newTracks = await fetchWebApi('v1/me/top/tracks?limit=10', 'GET').then(data => data.items);
-        }
+        const topTracks = await fetchWebApi('v1/me/top/tracks?limit=5', 'GET').then(data => data.items);
+        const topArtists = await fetchWebApi('v1/me/top/artists?limit=2', 'GET').then(data => data.items);
+        const topGenres = topArtists.flatMap(artist => artist.genres).slice(0, 2);
+        newTracks = await getRecommendedTracks(topTracks, topArtists.map(artist => artist.id), topGenres);
     }
     
-    tracks.push(...newTracks);
+    // Filtrar las canciones ya reproducidas
+    newTracks = newTracks.filter(track => !playedTracks.includes(track.id));
     
+    tracks.push(...newTracks);
 }
+async function getTopGenres(artistIds) {
+    const artists = await Promise.all(artistIds.map(id => fetchWebApi(`v1/artists/${id}`, 'GET')));
+    const genres = artists.flatMap(artist => artist.genres);
+    return [...new Set(genres)].slice(0, 2);
+}
+
 async function playNext() {
     currentTrackIndex++;
 
@@ -131,7 +150,7 @@ function playPrevious() {
     }
 }
 
-function playTrack(track) {
+async function playTrack(track) {
     if (track && track.preview_url) {
         document.getElementById('track-name').innerText = track.name;
         document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
@@ -140,6 +159,14 @@ function playTrack(track) {
         audio.src = track.preview_url;
         audio.play();
         updatePlayPauseButton();
+        
+        // Agregar la pista a las reproducidas
+        playedTracks.push(track.id);
+        
+        // Limitar playedTracks a las últimas 100 canciones
+        if (playedTracks.length > 100) {
+            playedTracks = playedTracks.slice(-100);
+        }
     } else {
         console.log('Track or preview URL not available.');
     }
@@ -163,21 +190,30 @@ function togglePlayPause() {
     updatePlayPauseButton();
 }
 
-function likeTrack() {
+async function likeTrack() {
     const track = tracks[currentTrackIndex];
     if (track) {
         likedTracks.push(track.id);
+        const artistGenres = await getArtistGenres(track.artists[0].id);
+        likedGenres = [...new Set([...likedGenres, ...artistGenres])];
         saveToPlaylist();
         playNext();
     }
 }
 
-function dislikeTrack() {
+async function dislikeTrack() {
     const track = tracks[currentTrackIndex];
     if (track) {
         dislikedTracks.push(track.id);
+        const artistGenres = await getArtistGenres(track.artists[0].id);
+        dislikedGenres = [...new Set([...dislikedGenres, ...artistGenres])];
         playNext();
     }
+}
+
+async function getArtistGenres(artistId) {
+    const artist = await fetchWebApi(`v1/artists/${artistId}`, 'GET');
+    return artist.genres || [];
 }
 
 let startY;
@@ -231,14 +267,50 @@ async function selectArtist(artist) {
     document.getElementById('artist-input').value = artist.name;
     document.getElementById('artist-suggestions').classList.add('hidden');
 
-    const topTracks = await fetchWebApi(`v1/artists/${artist.id}/top-tracks?market=US`, 'GET');
-    if (topTracks && topTracks.tracks) {
-        tracks = topTracks.tracks.filter(track => track.preview_url);
-        currentTrackIndex = -1;
-        playNext();
-    }
+    const artistTracks = await getArtistTracks(artist.id);
+    const relatedArtists = await getRelatedArtists(artist.id);
+    const relatedArtistsTracks = await getRelatedArtistsTracks(relatedArtists);
+
+    tracks = shuffleArray([...artistTracks, ...relatedArtistsTracks]);
+    currentTrackIndex = -1;
+    playNext();
 }
 
+async function getArtistTracks(artistId) {
+    const topTracks = await fetchWebApi(`v1/artists/${artistId}/top-tracks?market=US`, 'GET');
+    const albums = await fetchWebApi(`v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`, 'GET');
+    
+    let allTracks = topTracks.tracks;
+    
+    for (let album of albums.items) {
+        const albumTracks = await fetchWebApi(`v1/albums/${album.id}/tracks`, 'GET');
+        allTracks = allTracks.concat(albumTracks.items);
+    }
+    
+    return shuffleArray(allTracks).slice(0, 20).filter(track => track.preview_url);
+}
+
+async function getRelatedArtists(artistId) {
+    const related = await fetchWebApi(`v1/artists/${artistId}/related-artists`, 'GET');
+    return related.artists.slice(0, 5);
+}
+
+async function getRelatedArtistsTracks(relatedArtists) {
+    let tracks = [];
+    for (let artist of relatedArtists) {
+        const artistTracks = await getArtistTracks(artist.id);
+        tracks = tracks.concat(artistTracks.slice(0, 4));
+    }
+    return tracks;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 async function getRecommendedTracksForArtist(artistId) {
     const response = await fetchWebApi(`v1/recommendations?limit=10&seed_artists=${artistId}`, 'GET');
     return response.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
