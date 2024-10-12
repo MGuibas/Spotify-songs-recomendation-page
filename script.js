@@ -10,7 +10,6 @@ let likedTracks = [];
 let dislikedTracks = [];
 let likedGenres = [];
 let dislikedGenres = [];
-let playedTracks = [];
 let audio = new Audio();
 
 function login() {
@@ -92,13 +91,12 @@ async function getRecommendedTracks(seedTracks, seedArtists = [], seedGenres = [
     const seed_artists = seedArtists.join(',');
     const seed_genres = [...new Set([...seedGenres, ...likedGenres])].slice(0, 5).join(',');
     try {
-        const recommendations = await fetchWebApi(`v1/recommendations?limit=50&seed_tracks=${seed_tracks}&seed_artists=${seed_artists}&seed_genres=${seed_genres}`, 'GET');
+        const recommendations = await fetchWebApi(`v1/recommendations?limit=20&seed_tracks=${seed_tracks}&seed_artists=${seed_artists}&seed_genres=${seed_genres}`, 'GET');
         if (recommendations) {
             return recommendations.tracks.filter(track => 
                 track.preview_url && 
                 !dislikedTracks.includes(track.id) &&
-                !dislikedGenres.some(genre => track.artists.some(artist => artist.genres && artist.genres.includes(genre))) &&
-                !playedTracks.includes(track.id)
+                !dislikedGenres.some(genre => track.artists.some(artist => artist.genres && artist.genres.includes(genre)))
             );
         }
     } catch (error) {
@@ -120,9 +118,6 @@ async function loadMoreTracks() {
         const topGenres = topArtists.flatMap(artist => artist.genres).slice(0, 2);
         newTracks = await getRecommendedTracks(topTracks, topArtists.map(artist => artist.id), topGenres);
     }
-    
-    // Filtrar las canciones ya reproducidas
-    newTracks = newTracks.filter(track => !playedTracks.includes(track.id));
     
     tracks.push(...newTracks);
 }
@@ -150,7 +145,7 @@ function playPrevious() {
     }
 }
 
-async function playTrack(track) {
+function playTrack(track) {
     if (track && track.preview_url) {
         document.getElementById('track-name').innerText = track.name;
         document.getElementById('track-artist').innerText = track.artists.map(artist => artist.name).join(', ');
@@ -159,14 +154,6 @@ async function playTrack(track) {
         audio.src = track.preview_url;
         audio.play();
         updatePlayPauseButton();
-        
-        // Agregar la pista a las reproducidas
-        playedTracks.push(track.id);
-        
-        // Limitar playedTracks a las últimas 100 canciones
-        if (playedTracks.length > 100) {
-            playedTracks = playedTracks.slice(-100);
-        }
     } else {
         console.log('Track or preview URL not available.');
     }
@@ -267,50 +254,14 @@ async function selectArtist(artist) {
     document.getElementById('artist-input').value = artist.name;
     document.getElementById('artist-suggestions').classList.add('hidden');
 
-    const artistTracks = await getArtistTracks(artist.id);
-    const relatedArtists = await getRelatedArtists(artist.id);
-    const relatedArtistsTracks = await getRelatedArtistsTracks(relatedArtists);
-
-    tracks = shuffleArray([...artistTracks, ...relatedArtistsTracks]);
-    currentTrackIndex = -1;
-    playNext();
-}
-
-async function getArtistTracks(artistId) {
-    const topTracks = await fetchWebApi(`v1/artists/${artistId}/top-tracks?market=US`, 'GET');
-    const albums = await fetchWebApi(`v1/artists/${artistId}/albums?include_groups=album,single&market=US&limit=50`, 'GET');
-    
-    let allTracks = topTracks.tracks;
-    
-    for (let album of albums.items) {
-        const albumTracks = await fetchWebApi(`v1/albums/${album.id}/tracks`, 'GET');
-        allTracks = allTracks.concat(albumTracks.items);
+    const topTracks = await fetchWebApi(`v1/artists/${artist.id}/top-tracks?market=US`, 'GET');
+    if (topTracks && topTracks.tracks) {
+        tracks = topTracks.tracks.filter(track => track.preview_url);
+        currentTrackIndex = -1;
+        playNext();
     }
-    
-    return shuffleArray(allTracks).slice(0, 20).filter(track => track.preview_url);
 }
 
-async function getRelatedArtists(artistId) {
-    const related = await fetchWebApi(`v1/artists/${artistId}/related-artists`, 'GET');
-    return related.artists.slice(0, 5);
-}
-
-async function getRelatedArtistsTracks(relatedArtists) {
-    let tracks = [];
-    for (let artist of relatedArtists) {
-        const artistTracks = await getArtistTracks(artist.id);
-        tracks = tracks.concat(artistTracks.slice(0, 4));
-    }
-    return tracks;
-}
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
 async function getRecommendedTracksForArtist(artistId) {
     const response = await fetchWebApi(`v1/recommendations?limit=10&seed_artists=${artistId}`, 'GET');
     return response.tracks.filter(track => track.preview_url && !dislikedTracks.includes(track.id));
