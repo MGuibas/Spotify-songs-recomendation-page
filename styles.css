@@ -1,401 +1,110 @@
 :root {
   --spotify-green: #1DB954;
-  --spotify-black: #191414;
+  --spotify-black: #121212;
   --spotify-gray: #535353;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: 'Circular', 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, var(--spotify-black), #121212);
-  color: white;
-  height: 100vh;
   margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-.container {
-  background-color: rgba(25, 20, 20, 0.8);
-  border-radius: 20px;
-  padding: 40px;
-  width: 90%;
-  max-width: 450px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  z-index: 1;
-}
-
-.container:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-}
-
-#vinyl-background {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 200vw;
-  height: 200vw;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="%23191414" stroke="%23535353" stroke-width="0.5"/><circle cx="50" cy="50" r="20" fill="none" stroke="%23535353" stroke-width="0.5"/><circle cx="50" cy="50" r="3" fill="%23535353"/></svg>');
-  background-size: contain;
-  opacity: 0.1;
-  animation: spin 20s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes spin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-#track {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-#track-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  transition: all 0.3s ease;
-}
-
-#track-link:hover {
-  transform: scale(1.05);
-}
-
-#album-cover {
-  width: 250px;
-  height: 250px;
-  margin: 0 auto 30px;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-}
-
-#album-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: all 0.5s ease;
-}
-
-#album-cover:hover {
-  transform: rotate(5deg) scale(1.05);
-}
-
-#album-cover::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
-  pointer-events: none;
-}
-
-#track-name {
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: var(--spotify-green);
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-#track-artist {
-  font-size: 20px;
-  color: #A0A0A0;
-  margin-bottom: 20px;
-}
-
-#controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-button {
-  background-color: transparent;
+  font-family: 'Helvetica Neue', sans-serif;
+  background: var(--spotify-black);
   color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+.screen {
+  height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  align-items: center;
 }
 
-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+.hidden {
+  display: none;
 }
 
-button:active {
-  transform: scale(0.95);
+#login-button {
+  padding: 15px 30px;
+  background: var(--spotify-green);
+  border: none;
+  border-radius: 30px;
+  font-size: 18px;
+  color: white;
+  cursor: pointer;
 }
 
-button i {
-  width: 24px;
-  height: 24px;
-  transition: all 0.3s ease;
-}
-
-#play-pause-btn {
-  background-color: var(--spotify-green);
+#player-screen {
+  position: relative;
   padding: 20px;
 }
 
-#play-pause-btn:hover {
-  background-color: #1ed760;
+.track {
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+}
+
+#album-cover {
+  width: 90vw;
+  max-width: 400px;
+  height: 90vw;
+  max-height: 400px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.track-info {
+  margin-top: 20px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.controls button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.swipe-buttons {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.swipe-buttons button {
+  font-size: 32px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  color: white;
+  cursor: pointer;
+}
+
+#like-btn {
+  color: var(--spotify-green);
 }
 
 #dislike-btn {
   color: #ff4d4d;
 }
 
-#save-btn {
-  color: var(--spotify-green);
-}
-
-#volume-slider {
-  width: 100%;
-  margin-top: 20px;
-}
-
-input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 5px;
-  border-radius: 5px;
-  background: var(--spotify-gray);
-  outline: none;
-  opacity: 0.7;
-  transition: opacity .2s;
-}
-
-input[type="range"]:hover {
-  opacity: 1;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--spotify-green);
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--spotify-green);
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-
-input[type="range"]::-moz-range-thumb:hover {
-  transform: scale(1.2);
-}
-
-#login-button {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  font-size: 18px;
-  margin-top: 30px;
-  background-color: var(--spotify-green);
-  color: white;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-#login-button:hover {
-  background-color: #1ed760;
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-#artist-form {
-  margin-top: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-
-#artist-input {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 30px;
-  font-size: 16px;
-  text-align: center;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  transition: all 0.3s ease;
-}
-
-#artist-input:focus {
-  outline: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-#artist-suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background-color: var(--spotify-black);
-  border-radius: 0 0 15px 15px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 10;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.artist-suggestion {
-  padding: 15px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.artist-suggestion:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.hidden {
-  display: none !important;
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-  animation: fadeIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@media (max-width: 480px) {
-  .container {
-    width: 95%;
-    padding: 30px;
-  }
-
-  #controls {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  button {
-    margin: 10px;
-  }
-
-  #album-cover {
-    width: 200px;
-    height: 200px;
-  }
-}
-
-*,
-*:before,
-*:after {
-  box-sizing: border-box;
-}
-
-body {
-  background: lightgrey;
-}
-
-.vinyl-wrapper {
-  position: relative;
-  display: block;
-  margin: 150px;
-  width: 200px;
-  height: 200px;
-  transform: rotateX(10deg) rotateZ(-20deg);
-}
-
-.record-sleeve {
-  width: 200px;
-  height: 200px;
-  position: absolute;
-  background: -webkit-radial-gradient(49% 50%, circle, transparent 27%, #8c737c 10%);
-  background: -moz-radial-gradient(49% 50%, circle, transparent 27%, #8c737c 10%);
-  background: radial-gradient(49% 50%, circle, transparent 27%, #8c737c 10%);
-  border-radius: 2px;
-  box-shadow: -3px 5px 10px -1px grey;
-  z-index: 10;
-}
-
-.vinyl {
-  position: absolute;
-  -ms-transform: translate(69px);
-  transform: translate(69px);
-  top: 70px;
-  background: #f7aac7;
-  width: 58px;
-  height: 60px;
-  border-radius: 50%;
-  border: solid #e7568d;
-  border-width: 29px 0px;
-  border-left: 0;
-  animation: pull-out 1.3s 2s ease-out forwards, spin 1.3s 4s linear infinite;
-  box-shadow: 0px 0px 3px #f7aac7, 0px 0px 0px 10px #ea6a9b, 0px 0px 15px #f7aac7, 0px 0px 0px 16px #000, 0px 0px 0px 17px #252424, 0px 0px 0px 18px #000, 0px 0px 0px 19px #313030, 0px 0px 0px 20px #000, 0px 0px 0px 21px #3a3838, 0px 0px 0px 22px #000, 0px 0px 0px 23px #2b2a2a, 0px 0px 0px 24px #000, 0px 0px 0px 25px #313030, 0px 0px 0px 26px #000, 0px 0px 0px 27px #313030, 0px 0px 0px 28px #000, 0px 0px 0px 29px #333333, 0px 0px 0px 30px #000, 0px 0px 0px 31px #333232, 0px 0px 0px 32px #000, 0px 0px 0px 33px #4c4a4a, 0px 0px 0px 34px #000, 0px 0px 0px 35px #2f2e2e, 0px 0px 0px 36px #000, 0px 0px 0px 37px #252424, 0px 0px 0px 38px #000, 0px 0px 0px 39px #2f2e2e, 0px 0px 0px 40px #000, 0px 0px 0px 41px #2f2e2e, 0px 0px 0px 42px #000, 0px 0px 0px 55px #2f2e2e, 0px 0px 0px 56px #000, 0px 0px 0px 57px #2f2e2e, 0px 0px 0px 58px #cecece, 0px 0px 0px 59px #2f2e2e;
-}
-
-.vinyl:before {
-  content: "";
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: white;
-  top: calc(50% - 3px);
-  left: calc(50% - 3px);
-  border-radius: 50%;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-    left: 300px;
-  }
-  100% {
-    transform: rotate(360deg);
-    left: 300px;
-  }
-}
-
-@keyframes pull-out {
-  0% {
-    transform: translateX(69px);
-  }
-  100% {
-    transform: translateX(300px);
-  }
 }
