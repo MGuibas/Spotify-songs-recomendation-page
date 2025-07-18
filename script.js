@@ -53,6 +53,7 @@ async function getUserId() {
     return userId;
 }
 
+// FUNCIÓN CORREGIDA
 async function getOrCreatePlaylist() {
     if (!playlistId) {
         const playlists = await fetchWebApi('v1/me/playlists', 'GET');
@@ -62,12 +63,17 @@ async function getOrCreatePlaylist() {
             if (playlist) {
                 playlistId = playlist.id;
             } else {
-                const newPlaylist = await fetchWebApi(`v1/users/${await getUserId()}/playlists`, 'POST', {
-                    name: 'Recomendaciones Spotify',
-                    description: 'Playlist creada automáticamente para canciones de la web que ha hecho marquitos, Miau',
-                    public: false
-                });
-                if (newPlaylist) playlistId = newPlaylist.id;
+                const currentUserId = await getUserId(); // Obtiene el ID del usuario
+                if (currentUserId) { // Comprueba si el ID existe
+                    const newPlaylist = await fetchWebApi(`v1/users/${currentUserId}/playlists`, 'POST', {
+                        name: 'Recomendaciones Spotify',
+                        description: 'Playlist creada automáticamente para canciones de la web que ha hecho marquitos, Miau',
+                        public: false
+                    });
+                    if (newPlaylist) playlistId = newPlaylist.id;
+                } else {
+                    console.error("No se pudo obtener el User ID para crear la playlist.");
+                }
             }
         }
     }
@@ -106,7 +112,11 @@ async function loadMoreTracks() {
         if (artistId) {
             newTracks = await getRecommendedTracksForArtist(artistId);
         } else {
-            newTracks = await fetchWebApi('v1/me/top/tracks?limit=10', 'GET').then(data => data.items);
+            // LÍNEA CORREGIDA
+            const topTracks = await fetchWebApi('v1/me/top/tracks?limit=10', 'GET');
+            if (topTracks && topTracks.items) {
+                newTracks = topTracks.items.filter(track => track.preview_url);
+            }
         }
     }
     
