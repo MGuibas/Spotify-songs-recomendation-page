@@ -1,4 +1,4 @@
-const clientId = 'b6a4fbf9f4fc4646b8862fc9d157d071';
+const clientId = '4ee2f6ac25bb46e99b19d77ca9edbac9';
 const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
 const scopes = 'user-top-read user-read-recently-played playlist-modify-private playlist-read-private';
 let accessToken;
