@@ -1,5 +1,5 @@
 const clientId = '12c41f260c314ff0944177931dd7a931';
-const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page/';
+const redirectUri = 'https://mguibas.github.io/Spotify-songs-recomendation-page';
 const scopes = 'user-top-read user-read-recently-played playlist-modify-private playlist-read-private';
 let accessToken;
 let userId;
@@ -291,4 +291,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('login-button').addEventListener('click', login);
     }
 });
+
 
